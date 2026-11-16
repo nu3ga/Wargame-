@@ -1,5 +1,81 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { FpsWeaponSpringState } from './rendaMath';
+
+// Small machined edge radii catch the environment lighting without increasing draw calls.
+function machinedBox(width: number, height: number, depth: number): THREE.BufferGeometry {
+  return new RoundedBoxGeometry(width, height, depth, 2, Math.min(width, height, depth) * 0.16);
+}
+
+function createWeaponMarkingTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#c8c8bb';
+  ctx.textBaseline = 'top';
+  ctx.font = '500 52px monospace';
+  ctx.fillText('MOD. 04 / 5.56 × 45', 24, 30);
+  ctx.font = '32px monospace';
+  ctx.fillText('FIELD CARBINE   NO. 08219', 24, 104);
+  ctx.fillStyle = '#b9b6a3';
+  ctx.fillRect(24, 178, 280, 3);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  return texture;
+}
+
+function createMuzzleFlashTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+  const glow = ctx.createRadialGradient(64, 64, 0, 64, 64, 60);
+  glow.addColorStop(0, 'rgba(255,255,238,1)');
+  glow.addColorStop(0.13, 'rgba(255,233,167,.95)');
+  glow.addColorStop(0.35, 'rgba(255,169,67,.4)');
+  glow.addColorStop(1, 'rgba(255,94,14,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, 128, 128);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createWatchFaceTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 256;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#121b18';
+  ctx.fillRect(0, 0, 256, 256);
+  ctx.translate(128, 128);
+  ctx.strokeStyle = '#a6b7a6';
+  for (let i = 0; i < 60; i++) {
+    const angle = i * Math.PI / 30;
+    const inner = i % 5 === 0 ? 83 : 94;
+    ctx.lineWidth = i % 5 === 0 ? 5 : 1.5;
+    ctx.beginPath();
+    ctx.moveTo(Math.sin(angle) * inner, -Math.cos(angle) * inner);
+    ctx.lineTo(Math.sin(angle) * 103, -Math.cos(angle) * 103);
+    ctx.stroke();
+  }
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(-39, -27);
+  ctx.lineTo(0, 0);
+  ctx.lineTo(63, -42);
+  ctx.stroke();
+  ctx.strokeStyle = '#b68c60';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, 18);
+  ctx.lineTo(0, -92);
+  ctx.stroke();
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
 
 export interface WeaponViewmodelRig {
   root: THREE.Group;
@@ -48,11 +124,11 @@ function createGunMetalTextures(): {
   roughCanvas.height = size;
   const rCtx = roughCanvas.getContext('2d')!;
 
-  dCtx.fillStyle = '#292c30';
+  dCtx.fillStyle = '#4b4e4b';
   dCtx.fillRect(0, 0, size, size);
   bCtx.fillStyle = '#808080';
   bCtx.fillRect(0, 0, size, size);
-  rCtx.fillStyle = '#626262';
+  rCtx.fillStyle = '#c2c2c2';
   rCtx.fillRect(0, 0, size, size);
 
   let s = 1337;
@@ -69,7 +145,7 @@ function createGunMetalTextures(): {
     const grad = dCtx.createRadialGradient(x, y, 0, x, y, r);
     const dark = rand() > 0.45;
     grad.addColorStop(0, dark ? 'rgba(18,19,21,0.22)' : 'rgba(56,60,66,0.16)');
-    grad.addColorStop(1, 'rgba(41,44,48,0)');
+    grad.addColorStop(1, 'rgba(75,78,75,0)');
     dCtx.fillStyle = grad;
     dCtx.beginPath();
     dCtx.arc(x, y, r, 0, Math.PI * 2);
@@ -98,7 +174,7 @@ function createGunMetalTextures(): {
     bCtx.lineTo(x + len, y + (rand() - 0.5) * 3);
     bCtx.stroke();
 
-    rCtx.strokeStyle = isWear ? '#383838' : rand() > 0.45 ? '#787878' : '#4a4a4a';
+    rCtx.strokeStyle = isWear ? '#8c8c8c' : rand() > 0.45 ? '#cecece' : '#ababab';
     rCtx.globalAlpha = 0.3;
     rCtx.beginPath();
     rCtx.moveTo(x, y);
@@ -184,26 +260,7 @@ function createTacticalSleeveTextures(): {
     dCtx.fill();
   }
 
-  // Diagonal natural sleeve tension folds
-  for (let f = 0; f < 14; f++) {
-    const y0 = (f / 14) * size + (rand() - 0.5) * 18;
-    const g = dCtx.createLinearGradient(0, y0 - 16, 0, y0 + 16);
-    g.addColorStop(0, 'rgba(0,0,0,0)');
-    g.addColorStop(0.45, 'rgba(20,24,16,0.28)');
-    g.addColorStop(0.65, 'rgba(115,124,96,0.14)');
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    dCtx.fillStyle = g;
-    dCtx.fillRect(0, y0 - 16, size, 32);
-
-    const bg = bCtx.createLinearGradient(0, y0 - 14, 0, y0 + 14);
-    bg.addColorStop(0, 'rgba(128,128,128,0)');
-    bg.addColorStop(0.45, 'rgba(76,76,76,0.45)');
-    bg.addColorStop(0.65, 'rgba(182,182,182,0.35)');
-    bg.addColorStop(1, 'rgba(128,128,128,0)');
-    bCtx.fillStyle = bg;
-    bCtx.fillRect(0, y0 - 14, size, 28);
-  }
-
+  // Broad shading comes from the sleeve geometry, keeping the weave free of baked lighting.
   // Fine tactical ripstop cross-hatch weave
   for (let y = 0; y < size; y += 4) {
     const major = y % 24 === 0;
@@ -322,6 +379,9 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   const { map: metalMap, bumpMap: metalBump, roughnessMap: metalRough } = createGunMetalTextures();
   const { map: sleeveMap, bumpMap: fabricBump, roughnessMap: sleeveRough } = createTacticalSleeveTextures();
   const reticleTex = createHolographicReticleTexture();
+  const markingTex = createWeaponMarkingTexture();
+  const flashTex = createMuzzleFlashTexture();
+  const watchTex = createWatchFaceTexture();
   const textures: THREE.Texture[] = [
     metalMap,
     metalBump,
@@ -330,24 +390,27 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
     fabricBump,
     sleeveRough,
     reticleTex,
+    markingTex,
+    flashTex,
+    watchTex,
   ];
 
   const receiverMetalMat = new THREE.MeshStandardMaterial({
-    color: 0xd4d8de,
+    color: 0xa9afaa,
     map: metalMap,
-    roughness: 0.4,
-    metalness: 0.8,
+    roughness: 0.78,
+    metalness: 0.78,
     bumpMap: metalBump,
-    bumpScale: 0.011,
+    bumpScale: 0.00016,
     roughnessMap: metalRough,
   });
   const darkGunmetalMat = new THREE.MeshStandardMaterial({
-    color: 0x9aa0a8,
+    color: 0x737c76,
     map: metalMap,
-    roughness: 0.46,
-    metalness: 0.72,
+    roughness: 0.84,
+    metalness: 0.68,
     bumpMap: metalBump,
-    bumpScale: 0.008,
+    bumpScale: 0.00012,
     roughnessMap: metalRough,
   });
   const mattePolymerMat = new THREE.MeshStandardMaterial({
@@ -355,22 +418,24 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
     roughness: 0.8,
     metalness: 0.08,
     bumpMap: fabricBump,
-    bumpScale: 0.006,
+    bumpScale: 0.0002,
   });
   const steelMat = new THREE.MeshStandardMaterial({
     color: 0x4b5059,
     roughness: 0.28,
     metalness: 0.9,
     bumpMap: metalBump,
-    bumpScale: 0.004,
+    bumpScale: 0.0001,
   });
+  const recessMat = new THREE.MeshStandardMaterial({ color: 0x090c0b, roughness: 0.93, metalness: 0.12 });
+  const dustMat = new THREE.MeshStandardMaterial({ color: 0x55574b, roughness: 0.92, metalness: 0.05 });
   const oliveSleeveMat = new THREE.MeshStandardMaterial({
     color: 0xe6e4da,
     map: sleeveMap,
     roughness: 0.96,
     metalness: 0.01,
     bumpMap: fabricBump,
-    bumpScale: 0.028,
+    bumpScale: 0.00055,
     roughnessMap: sleeveRough,
   });
   const gloveFabricMat = new THREE.MeshStandardMaterial({
@@ -378,26 +443,27 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
     roughness: 0.84,
     metalness: 0.06,
     bumpMap: fabricBump,
-    bumpScale: 0.016,
+    bumpScale: 0.00035,
   });
   const knuckleArmorMat = new THREE.MeshStandardMaterial({
     color: 0x131517,
     roughness: 0.42,
     metalness: 0.28,
     bumpMap: metalBump,
-    bumpScale: 0.005,
+    bumpScale: 0.00015,
   });
   const watchDialMat = new THREE.MeshStandardMaterial({
-    color: 0x101814,
+    color: 0xffffff,
+    map: watchTex,
     emissive: 0x2d6e44,
-    emissiveIntensity: 0.65,
+    emissiveIntensity: 0.07,
     roughness: 0.12,
     metalness: 0.2,
   });
   const opticGlassMat = new THREE.MeshPhysicalMaterial({
-    color: 0x9fc8d8,
+    color: 0x8cb8ad,
     transparent: true,
-    opacity: 0.26,
+    opacity: 0.12,
     roughness: 0.05,
     metalness: 0.12,
     reflectivity: 0.9,
@@ -431,7 +497,7 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   weaponPivot.add(receiverMesh);
 
   // Brass deflector, ejection port recess, dust cover & forward assist
-  const deflector = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.024, 0.03), darkGunmetalMat);
+  const deflector = new THREE.Mesh(machinedBox(0.014, 0.024, 0.03), darkGunmetalMat);
   deflector.position.set(0.024, 0.038, 0.035);
   weaponPivot.add(deflector);
 
@@ -441,26 +507,59 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   forwardAssist.position.set(0.027, 0.031, 0.068);
   weaponPivot.add(forwardAssist);
 
-  const boltCarrier = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.018, 0.072), steelMat);
+  const boltCarrier = new THREE.Mesh(machinedBox(0.006, 0.018, 0.072), steelMat);
   boltCarrier.position.set(0.023, 0.038, -0.012);
   weaponPivot.add(boltCarrier);
 
+  const ejectionPort = new THREE.Mesh(machinedBox(0.004, 0.024, 0.086), recessMat);
+  ejectionPort.position.set(0.023, 0.038, -0.012);
+  weaponPivot.add(ejectionPort);
+  const dustCoverHinge = new THREE.Mesh(new THREE.CylinderGeometry(0.002, 0.002, 0.084, 8), steelMat);
+  dustCoverHinge.rotation.x = Math.PI / 2;
+  dustCoverHinge.position.set(0.028, 0.025, -0.012);
+  weaponPivot.add(dustCoverHinge);
+
+  // Subtle laser etching sits on the receiver, rather than glowing over the material.
+  const markingMat = new THREE.MeshStandardMaterial({
+    map: markingTex, transparent: true, opacity: 0.52, roughness: 1,
+    metalness: 0.12, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1,
+  });
+  for (const side of [-1, 1]) {
+    const markings = new THREE.Mesh(new THREE.PlaneGeometry(0.084, 0.021), markingMat);
+    markings.rotation.y = side * Math.PI / 2;
+    markings.position.set(side * 0.0265, 0.003, 0.04);
+    weaponPivot.add(markings);
+  }
+
+  const pins = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.0035, 0.0035, 0.0015, 12), steelMat, 8);
+  const pinTransform = new THREE.Object3D();
+  let pinIndex = 0;
+  for (const side of [-1, 1]) {
+    for (const [y, z] of [[-0.012, 0.075], [0.018, -0.072], [0.036, 0.088], [0.018, 0.016]]) {
+      pinTransform.position.set(side * 0.026, y, z);
+      pinTransform.rotation.z = Math.PI / 2;
+      pinTransform.updateMatrix();
+      pins.setMatrixAt(pinIndex++, pinTransform.matrix);
+    }
+  }
+  weaponPivot.add(pins);
+
   // Charging handle T-latch
-  const chargingHandle = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.011, 0.026), steelMat);
+  const chargingHandle = new THREE.Mesh(machinedBox(0.042, 0.011, 0.026), steelMat);
   chargingHandle.position.set(0, 0.054, 0.118);
   weaponPivot.add(chargingHandle);
 
   // Trigger guard & curved trigger
-  const triggerGuard = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.006, 0.052), mattePolymerMat);
+  const triggerGuard = new THREE.Mesh(machinedBox(0.012, 0.006, 0.052), mattePolymerMat);
   triggerGuard.position.set(0, -0.048, 0.048);
   weaponPivot.add(triggerGuard);
-  const trigger = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.022, 0.008), steelMat);
+  const trigger = new THREE.Mesh(machinedBox(0.006, 0.022, 0.008), steelMat);
   trigger.position.set(0, -0.034, 0.052);
   trigger.rotation.x = 0.25;
   weaponPivot.add(trigger);
 
   // Pistol grip
-  const pistolGrip = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.105, 0.046), mattePolymerMat);
+  const pistolGrip = new THREE.Mesh(machinedBox(0.034, 0.105, 0.046), mattePolymerMat);
   pistolGrip.position.set(0, -0.078, 0.098);
   pistolGrip.rotation.x = -0.34;
   weaponPivot.add(pistolGrip);
@@ -476,24 +575,34 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   bufferTube.position.set(0, 0.028, 0.22);
   weaponPivot.add(bufferTube);
 
-  const stockBody = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.092, 0.16), mattePolymerMat);
+  const stockBody = new THREE.Mesh(machinedBox(0.042, 0.092, 0.16), mattePolymerMat);
   stockBody.position.set(0, 0.008, 0.265);
   weaponPivot.add(stockBody);
 
   // Curved 30-round PMAG magazine with textured rib bands
   const magazineGroup = new THREE.Group();
   magazineGroup.position.set(0, -0.055, -0.052);
-  const magUpper = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.09, 0.064), mattePolymerMat);
+  const magUpper = new THREE.Mesh(machinedBox(0.028, 0.09, 0.064), mattePolymerMat);
   magUpper.rotation.x = 0.12;
   magazineGroup.add(magUpper);
-  const magLower = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.072, 0.062), mattePolymerMat);
+  const magLower = new THREE.Mesh(machinedBox(0.028, 0.072, 0.062), mattePolymerMat);
   magLower.position.set(0, -0.072, -0.014);
   magLower.rotation.x = 0.26;
   magazineGroup.add(magLower);
-  const magBaseplate = new THREE.Mesh(new THREE.BoxGeometry(0.031, 0.012, 0.068), knuckleArmorMat);
+  const magBaseplate = new THREE.Mesh(machinedBox(0.031, 0.012, 0.068), knuckleArmorMat);
   magBaseplate.position.set(0, -0.108, -0.023);
   magBaseplate.rotation.x = 0.26;
   magazineGroup.add(magBaseplate);
+  const magazineRibs = new THREE.InstancedMesh(machinedBox(0.0025, 0.004, 0.05), dustMat, 14);
+  const ribTransform = new THREE.Object3D();
+  for (let i = 0; i < 14; i++) {
+    const row = i % 7;
+    ribTransform.position.set(i < 7 ? -0.015 : 0.015, 0.022 - row * 0.018, -row * 0.0025);
+    ribTransform.rotation.x = 0.12 + row * 0.02;
+    ribTransform.updateMatrix();
+    magazineRibs.setMatrixAt(i, ribTransform.matrix);
+  }
+  magazineGroup.add(magazineRibs);
   weaponPivot.add(magazineGroup);
 
   // 2. Free-float M-LOK Vented Handguard & Fluted Barrel + Compensator
@@ -504,11 +613,11 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   weaponPivot.add(handguard);
 
   // Top full-length Picatinny rail spine + individual notched teeth
-  const railSpine = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.01, 0.56), receiverMetalMat);
+  const railSpine = new THREE.Mesh(machinedBox(0.022, 0.01, 0.56), receiverMetalMat);
   railSpine.position.set(0, 0.062, -0.155);
   weaponPivot.add(railSpine);
 
-  const toothGeo = new THREE.BoxGeometry(0.024, 0.005, 0.007);
+  const toothGeo = machinedBox(0.024, 0.005, 0.007);
   const toothCount = 34;
   const railTeeth = new THREE.InstancedMesh(toothGeo, steelMat, toothCount);
   const dummy = new THREE.Object3D();
@@ -521,22 +630,22 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   weaponPivot.add(railTeeth);
 
   // M-LOK side ventilation slots
-  const slotGeo = new THREE.BoxGeometry(0.004, 0.009, 0.032);
+  const slotGeo = machinedBox(0.004, 0.009, 0.032);
   for (const side of [-1, 1]) {
     for (let si = 0; si < 5; si++) {
-      const slot = new THREE.Mesh(slotGeo, steelMat);
+      const slot = new THREE.Mesh(slotGeo, recessMat);
       slot.position.set(side * 0.025, 0.032, -0.15 - si * 0.052);
       weaponPivot.add(slot);
     }
   }
 
   // Angled M-LOK handstop + side tactical weapon light + top PEQ laser module
-  const handstop = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.028, 0.064), mattePolymerMat);
+  const handstop = new THREE.Mesh(machinedBox(0.024, 0.028, 0.064), mattePolymerMat);
   handstop.position.set(0, -0.002, -0.258);
   handstop.rotation.x = 0.24;
   weaponPivot.add(handstop);
 
-  const tacLightMount = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.014, 0.028), receiverMetalMat);
+  const tacLightMount = new THREE.Mesh(machinedBox(0.016, 0.014, 0.028), receiverMetalMat);
   tacLightMount.position.set(0.026, 0.035, -0.35);
   weaponPivot.add(tacLightMount);
 
@@ -558,10 +667,10 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   tacLightLens.position.set(0.037, 0.035, -0.427);
   weaponPivot.add(tacLightLens);
 
-  const peqBody = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.016, 0.068), mattePolymerMat);
+  const peqBody = new THREE.Mesh(machinedBox(0.038, 0.016, 0.068), mattePolymerMat);
   peqBody.position.set(0.011, 0.074, -0.31);
   weaponPivot.add(peqBody);
-  const peqSwitch = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.004, 0.038), knuckleArmorMat);
+  const peqSwitch = new THREE.Mesh(machinedBox(0.018, 0.004, 0.038), knuckleArmorMat);
   peqSwitch.position.set(0, 0.072, -0.225);
   weaponPivot.add(peqSwitch);
 
@@ -575,16 +684,20 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   compensator.rotation.x = Math.PI / 2;
   compensator.position.set(0, 0.032, -0.57);
   weaponPivot.add(compensator);
+  const muzzleBore = new THREE.Mesh(new THREE.CircleGeometry(0.009, 16), recessMat);
+  muzzleBore.rotation.y = Math.PI;
+  muzzleBore.position.set(0, 0.032, -0.613);
+  weaponPivot.add(muzzleBore);
 
   // Flip-up front & rear backup iron sights
-  const frontSightBase = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.016, 0.026), mattePolymerMat);
+  const frontSightBase = new THREE.Mesh(machinedBox(0.022, 0.016, 0.026), mattePolymerMat);
   frontSightBase.position.set(0, 0.075, -0.415);
   weaponPivot.add(frontSightBase);
-  const frontPost = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.014, 0.006), steelMat);
+  const frontPost = new THREE.Mesh(machinedBox(0.004, 0.014, 0.006), steelMat);
   frontPost.position.set(0, 0.087, -0.418);
   weaponPivot.add(frontPost);
 
-  const rearSight = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.014, 0.028), mattePolymerMat);
+  const rearSight = new THREE.Mesh(machinedBox(0.026, 0.014, 0.028), mattePolymerMat);
   rearSight.position.set(0, 0.074, 0.082);
   weaponPivot.add(rearSight);
 
@@ -592,23 +705,23 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   const opticGroup = new THREE.Group();
   opticGroup.position.set(0, OPTIC_Y, -0.02);
 
-  const opticBase = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.014, 0.092), darkGunmetalMat);
+  const opticBase = new THREE.Mesh(machinedBox(0.038, 0.014, 0.092), darkGunmetalMat);
   opticBase.position.set(0, -0.014, 0);
   opticGroup.add(opticBase);
 
-  const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.0055, 0.044, 0.068), receiverMetalMat);
+  const leftWall = new THREE.Mesh(machinedBox(0.0055, 0.044, 0.068), receiverMetalMat);
   leftWall.position.set(-0.019, 0.012, -0.006);
   opticGroup.add(leftWall);
 
-  const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.0055, 0.044, 0.068), receiverMetalMat);
+  const rightWall = new THREE.Mesh(machinedBox(0.0055, 0.044, 0.068), receiverMetalMat);
   rightWall.position.set(0.019, 0.012, -0.006);
   opticGroup.add(rightWall);
 
-  const hoodTop = new THREE.Mesh(new THREE.BoxGeometry(0.043, 0.0055, 0.068), receiverMetalMat);
+  const hoodTop = new THREE.Mesh(machinedBox(0.043, 0.0055, 0.068), receiverMetalMat);
   hoodTop.position.set(0, 0.035, -0.006);
   opticGroup.add(hoodTop);
 
-  const batteryHood = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.024, 0.044), darkGunmetalMat);
+  const batteryHood = new THREE.Mesh(machinedBox(0.035, 0.024, 0.044), darkGunmetalMat);
   batteryHood.position.set(0, -0.002, -0.046);
   opticGroup.add(batteryHood);
 
@@ -624,10 +737,11 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   const reticleMat = new THREE.MeshBasicMaterial({
     map: reticleTex,
     transparent: true,
-    opacity: 0.96,
+    opacity: 0.82,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     depthTest: true,
+    toneMapped: false,
   });
   const reticleMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.028, 0.028), reticleMat);
   reticleMesh.position.set(0, 0.012, -0.006);
@@ -643,7 +757,19 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   const armMid = new THREE.Vector3().addVectors(elbowPos, wristPos).multiplyScalar(0.5);
   const armQuat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), armDir);
 
-  const leftForearm = new THREE.Mesh(new THREE.CylinderGeometry(0.047, 0.064, armSpan, 20), oliveSleeveMat);
+  const sleeveGeometry = new THREE.CylinderGeometry(0.047, 0.064, armSpan, 24, 18);
+  const sleevePositions = sleeveGeometry.getAttribute('position');
+  // The silhouette gets shallow cloth folds; fine ripstop remains a submillimetre bump.
+  for (let i = 0; i < sleevePositions.count; i++) {
+    const y = sleevePositions.getY(i);
+    const along = (y + armSpan * 0.5) / armSpan;
+    const angle = Math.atan2(sleevePositions.getZ(i), sleevePositions.getX(i));
+    const fold = Math.sin(along * 23 + Math.cos(angle * 2) * 0.9) * 0.045 * Math.sin(along * Math.PI);
+    sleevePositions.setX(i, sleevePositions.getX(i) * (1 + fold));
+    sleevePositions.setZ(i, sleevePositions.getZ(i) * (1 + fold));
+  }
+  sleeveGeometry.computeVertexNormals();
+  const leftForearm = new THREE.Mesh(sleeveGeometry, oliveSleeveMat);
   leftForearm.position.copy(armMid);
   leftForearm.quaternion.copy(armQuat);
   leftArmGroup.add(leftForearm);
@@ -660,7 +786,7 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   watchBand.quaternion.copy(armQuat);
   leftArmGroup.add(watchBand);
 
-  const watchCase = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.026, 0.012), knuckleArmorMat);
+  const watchCase = new THREE.Mesh(machinedBox(0.028, 0.026, 0.012), knuckleArmorMat);
   watchCase.position.copy(wristPos).addScaledVector(armDir, -0.002).add(new THREE.Vector3(-0.018, 0.036, 0));
   watchCase.quaternion.copy(armQuat);
   leftArmGroup.add(watchCase);
@@ -688,7 +814,7 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   leftPalm.rotation.set(Math.PI / 2 - 0.18, 0.14, -0.35);
   leftArmGroup.add(leftPalm);
 
-  const knuckleGuard = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.032, 0.062), knuckleArmorMat);
+  const knuckleGuard = new THREE.Mesh(machinedBox(0.018, 0.032, 0.062), knuckleArmorMat);
   knuckleGuard.position.set(-0.043, 0.025, -0.272);
   knuckleGuard.rotation.z = -0.26;
   leftArmGroup.add(knuckleGuard);
@@ -734,20 +860,24 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   muzzleFlashGroup.position.copy(muzzleWorldAnchor.position);
   muzzleFlashGroup.visible = false;
   const flashMat = new THREE.MeshBasicMaterial({
-    color: 0xffc978,
+    color: 0xffe5b5,
+    map: flashTex,
     transparent: true,
     opacity: 0.92,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     side: THREE.DoubleSide,
+    toneMapped: false,
   });
-  for (let i = 0; i < 4; i++) {
-    const fin = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.048), flashMat);
-    fin.rotation.z = (i / 4) * Math.PI;
-    fin.position.z = -0.025;
+  const flashGeometry = new THREE.PlaneGeometry(0.068, 0.15);
+  flashGeometry.rotateX(Math.PI / 2);
+  for (let i = 0; i < 3; i++) {
+    const fin = new THREE.Mesh(flashGeometry, flashMat);
+    fin.rotation.z = (i / 3) * Math.PI;
+    fin.position.z = -0.045;
     muzzleFlashGroup.add(fin);
   }
-  const flashCore = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 6), flashMat);
+  const flashCore = new THREE.Mesh(new THREE.SphereGeometry(0.014, 8, 6), flashMat);
   muzzleFlashGroup.add(flashCore);
   weaponPivot.add(muzzleFlashGroup);
 
@@ -762,6 +892,7 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
   // ADS pose: centers optic reticle (0, OPTIC_Y, ...) directly along camera forward ray
   const ADS_POS = new THREE.Vector3(0, -(OPTIC_Y + 0.012) * 0.56, -0.235);
   const ADS_ROT = new THREE.Euler(0, 0, 0);
+  let sprintBlend = 0;
 
   return {
     root,
@@ -773,7 +904,7 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
     muzzleWorldAnchor,
     reticleMesh,
     textures,
-    update: (_dt, elapsed, spring, opts) => {
+    update: (dt, elapsed, spring, opts) => {
       const a = spring.adsAlpha;
       const moveIntensity = Math.min(1.2, opts.speedMs / 5.0);
       const bobMult = (1 - a * 0.8) * (opts.speedMs > 0.25 ? moveIntensity : 0.14);
@@ -790,15 +921,13 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
       let rz = THREE.MathUtils.lerp(HIP_ROT.z, ADS_ROT.z, a) - spring.swayX * 1.1;
 
       // Tactical low-ready sprint cant
-      let sx = 0;
-      let sy = 0;
-      if (opts.sprinting && a < 0.2 && opts.reloadProgress <= 0) {
-        sx = -0.055;
-        sy = -0.032;
-        rx -= 0.14;
-        ry += 0.38;
-        rz += 0.22;
-      }
+      const sprintTarget = opts.sprinting && a < 0.2 && opts.reloadProgress <= 0 ? 1 : 0;
+      sprintBlend = THREE.MathUtils.damp(sprintBlend, sprintTarget, 10, Math.min(dt, 0.1));
+      const sx = -0.055 * sprintBlend;
+      const sy = -0.032 * sprintBlend;
+      rx -= 0.14 * sprintBlend;
+      ry += 0.38 * sprintBlend;
+      rz += 0.22 * sprintBlend;
 
       // Reload animation (tilt weapon & drop/swap magazine)
       let magDropY = 0;
@@ -825,6 +954,10 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
       weaponPivot.position.set(px + sx, py + sy, pz);
       weaponPivot.rotation.set(rx, ry, rz);
       magazineGroup.position.y = -0.055 + magDropY;
+      const supportHandReach = opts.reloadProgress > 0
+        ? Math.sin(THREE.MathUtils.smoothstep(opts.reloadProgress, 0.08, 0.9) * Math.PI)
+        : 0;
+      leftArmGroup.position.set(supportHandReach * 0.022, supportHandReach * -0.1, supportHandReach * 0.18);
       boltCarrier.position.z = -0.012 + opts.boltKick * 0.055;
 
       const flashActive = opts.muzzleFlashTimer > 0;
@@ -838,6 +971,17 @@ export function createWeaponViewmodelRig(): WeaponViewmodelRig {
     },
     dispose: () => {
       for (const t of textures) t.dispose();
+      const geometries = new Set<THREE.BufferGeometry>();
+      const materials = new Set<THREE.Material>();
+      root.traverse((object) => {
+        if (!(object instanceof THREE.Mesh)) return;
+        geometries.add(object.geometry);
+        const meshMaterials = Array.isArray(object.material) ? object.material : [object.material];
+        for (const material of meshMaterials) materials.add(material);
+        if (object instanceof THREE.InstancedMesh) object.dispose();
+      });
+      for (const geometry of geometries) geometry.dispose();
+      for (const material of materials) material.dispose();
     },
   };
 }

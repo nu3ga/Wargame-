@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -102,6 +102,9 @@ import {
 } from './aaaFoliageSystem';
 import { loadAaaVillageProps, type AaaPropsConfig, type AaaVillagePropsHandle } from './aaaPropsSystem';
 import { createWeaponViewmodelRig, type WeaponViewmodelRig } from './weaponViewmodel';
+import { ContactOcclusionPass } from './ContactOcclusionPass';
+import { BulletImpactSystem } from './BulletImpactSystem';
+import { QUALITY_STORAGE_KEY, RENDER_QUALITY, readRenderQuality } from './renderQuality';
 import type {
   AtmospherePreset,
   BuildingDesignRecipe,
@@ -116,6 +119,7 @@ import type {
   RoofStyle,
   SelectedBuildingInfo,
   WorldHudSnapshot,
+  RenderQuality,
 } from './types';
 
 const WORLD = worldRaw as unknown as RendaWorldDataset;
@@ -471,6 +475,10 @@ export class RendaSceneEngine {
   private bloomPass: UnrealBloomPass | null = null;
   private colorGradePass: ShaderPass | null = null;
   private fxaaPass: ShaderPass | null = null;
+  private contactOcclusionPass: ContactOcclusionPass | null = null;
+  private renderQuality: RenderQuality = 'balanced';
+  private bulletImpacts: BulletImpactSystem;
+  private terrainMesh: THREE.Mesh | null = null;
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private controls: OrbitControls;
@@ -483,7 +491,7 @@ export class RendaSceneEngine {
   private isSoftwareGl: boolean;
   private frameCount = 0;
   private readonly shadowHalfExtent = 76;
-  private readonly shadowMapRes = 2048;
+  private shadowMapRes = 2048;
 
   private colliders: BuildingCollider[] = [];
   private buildingMap = new Map<number, BuildingEntry>();
@@ -533,7 +541,12 @@ export class RendaSceneEngine {
   private wetnessUniform = { value: 0.45 };
   private mistOpacityUniform = { value: 0.55 };
   private envRenderTarget: THREE.WebGLRenderTarget | null = null;
+  private outdoorEnvironments = new Map<string, THREE.WebGLRenderTarget>();
+  private skyPanoramas = new Map<string, THREE.Texture>();
+  private readyToRender = false;
+  private initialAssetsReady = false;
   private skyEnvBuilt = false;
+  private skyEnvPreset: AtmospherePreset | null = null;
 
   private cloudDome: THREE.Mesh | null = null;
   private valleyMistGroup: THREE.Group | null = null;
@@ -666,27 +679,25 @@ export class RendaSceneEngine {
       return /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(gpu);
     })();
 
+    this.renderQuality = readRenderQuality(this.isSoftwareGl);
+    this.shadowMapRes = RENDER_QUALITY[this.renderQuality].shadowSize;
+
     this.renderer = new THREE.WebGLRenderer({
-      antialias: !this.isSoftwareGl,
+      antialias: false,
       powerPreference: 'high-performance',
       preserveDrawingBuffer: this.isSoftwareGl,
     });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.96;
-    this.renderer.setPixelRatio(this.isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(this.getRenderPixelRatio());
     this.renderer.setSize(container.clientWidth || window.innerWidth, container.clientHeight || window.innerHeight);
-    this.renderer.shadowMap.enabled = !this.isSoftwareGl;
+    this.renderer.shadowMap.enabled = this.renderQuality !== 'performance' || !this.isSoftwareGl;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(this.renderer.domElement);
 
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.FogExp2(0xcbd7dc, 0.0014);
-
-    // Environment reflection via RoomEnvironment
-    const pmrem = new THREE.PMREMGenerator(this.renderer);
-    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    pmrem.dispose();
 
     const w = container.clientWidth || window.innerWidth;
     const h = container.clientHeight || window.innerHeight;
@@ -713,7 +724,7 @@ export class RendaSceneEngine {
     this.scene.add(this.sky);
 
     this.sunLight = new THREE.DirectionalLight(0xffe7c2, 2.35);
-    this.sunLight.castShadow = !this.isSoftwareGl;
+    this.sunLight.castShadow = this.renderer.shadowMap.enabled;
     this.sunLight.shadow.mapSize.set(this.shadowMapRes, this.shadowMapRes);
     this.sunLight.shadow.camera.near = 10;
     this.sunLight.shadow.camera.far = 760;
@@ -722,8 +733,9 @@ export class RendaSceneEngine {
     this.sunLight.shadow.camera.right = d;
     this.sunLight.shadow.camera.top = d;
     this.sunLight.shadow.camera.bottom = -d;
-    this.sunLight.shadow.bias = -0.00028;
-    this.sunLight.shadow.normalBias = 0.018;
+    this.sunLight.shadow.bias = -0.00012;
+    this.sunLight.shadow.normalBias = 0.035;
+    this.sunLight.shadow.radius = 2;
     this.scene.add(this.sunLight);
     this.scene.add(this.sunLight.target);
 
@@ -767,8 +779,10 @@ export class RendaSceneEngine {
     this.scene.add(this.explorerRig.group);
 
     this.weaponViewmodel = createWeaponViewmodelRig();
+    this.weaponViewmodel.root.userData.excludeContactOcclusion = true;
     this.weaponViewmodel.root.visible = false;
     this.camera.add(this.weaponViewmodel.root);
+    this.bulletImpacts = new BulletImpactSystem(this.scene);
 
     this.carRig = createCourierCarGroup();
     this.carRig.group.visible = false;
@@ -823,21 +837,26 @@ export class RendaSceneEngine {
     );
     this.updateMissionBeacon();
 
-    if (!this.isSoftwareGl) {
-      const pr = Math.min(window.devicePixelRatio, 2);
+    {
+      const pr = this.getRenderPixelRatio();
       this.composerRenderTarget = new THREE.WebGLRenderTarget(
         Math.max(1, Math.round(w * pr)),
         Math.max(1, Math.round(h * pr)),
         {
           type: THREE.HalfFloatType,
-          samples: 4,
+          samples: RENDER_QUALITY[this.renderQuality].samples,
         }
       );
       this.composer = new EffectComposer(this.renderer, this.composerRenderTarget);
       this.composer.setPixelRatio(pr);
       this.composer.setSize(w, h);
       this.composer.addPass(new RenderPass(this.scene, this.camera));
-      this.bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.08, 0.28, 0.96);
+      if (RENDER_QUALITY[this.renderQuality].contactShadows) {
+        this.contactOcclusionPass = new ContactOcclusionPass(this.scene, this.camera, w, h);
+        this.composer.addPass(this.contactOcclusionPass);
+      }
+      this.bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.1, 0.4, 1.4);
+      this.bloomPass.enabled = RENDER_QUALITY[this.renderQuality].bloom;
       this.composer.addPass(this.bloomPass);
       this.colorGradePass = new ShaderPass(createCinematicColorGradeShader());
       this.colorGradePass.uniforms['uResolution'].value.set(w * pr, h * pr);
@@ -848,10 +867,13 @@ export class RendaSceneEngine {
       this.composer.addPass(this.fxaaPass);
       // Sync atmosphere uniforms after colorGradePass exists
       this.setAtmosphere(this.atmosphere);
-      this.renderer.compile(this.scene, this.camera);
+      // Compile on first use so disabled quality effects do not delay startup.
     }
 
     this.bindEvents();
+    this.readyToRender = true;
+    document.body.dataset.quality = this.renderQuality;
+    this.loadOutdoorLighting();
     this.lastTime = performance.now();
     this.emitHud(true);
     this.loop();
@@ -1017,6 +1039,7 @@ export class RendaSceneEngine {
       cliffNormal,
     });
     const terrain = new THREE.Mesh(geo, mat);
+    this.terrainMesh = terrain;
     terrain.receiveShadow = true;
     this.scene.add(terrain);
   }
@@ -2356,7 +2379,8 @@ export class RendaSceneEngine {
       this.sunDirUniform,
       this.sunColorUniform,
       this.isSoftwareGl,
-      this.getMaxTexAnisotropy()
+      this.getMaxTexAnisotropy(),
+      this.camera
     );
     this.treeSystem = handle;
     this.extraTextures.push(...textures);
@@ -3228,10 +3252,68 @@ export class RendaSceneEngine {
     this.camZoomOffset = THREE.MathUtils.clamp(this.camZoomOffset + e.deltaY * 0.0045, -2.6, 10.5);
   };
 
+  private getRenderPixelRatio(): number {
+    return Math.min(window.devicePixelRatio || 1, RENDER_QUALITY[this.renderQuality].pixelRatio);
+  }
+
+  public getRenderQuality(): RenderQuality {
+    return this.renderQuality;
+  }
+
+  public finishLoading(): void {
+    this.applyMaterialQuality();
+    this.initialAssetsReady = true;
+    this.lastTime = performance.now();
+  }
+
+  public setRenderQuality(quality: RenderQuality): void {
+    if (quality === this.renderQuality) return;
+    this.renderQuality = quality;
+    const settings = RENDER_QUALITY[quality];
+    try { localStorage.setItem(QUALITY_STORAGE_KEY, quality); } catch { /* Optional preference. */ }
+    this.shadowMapRes = Math.min(settings.shadowSize, this.renderer.capabilities.maxTextureSize);
+    this.renderer.shadowMap.enabled = quality !== 'performance' || !this.isSoftwareGl;
+    this.sunLight.castShadow = this.renderer.shadowMap.enabled;
+    this.sunLight.shadow.map?.dispose();
+    this.sunLight.shadow.map = null;
+    this.sunLight.shadow.mapSize.set(this.shadowMapRes, this.shadowMapRes);
+    this.sunLight.shadow.needsUpdate = true;
+    if (this.composer) {
+      for (const target of [this.composer.renderTarget1, this.composer.renderTarget2]) {
+        target.samples = settings.samples;
+        target.dispose();
+      }
+      if (settings.contactShadows && !this.contactOcclusionPass) {
+        this.contactOcclusionPass = new ContactOcclusionPass(this.scene, this.camera, 1, 1);
+        this.composer.insertPass(this.contactOcclusionPass, 1);
+      }
+    }
+    if (this.contactOcclusionPass) this.contactOcclusionPass.enabled = settings.contactShadows;
+    if (this.bloomPass) this.bloomPass.enabled = settings.bloom;
+    this.applyMaterialQuality();
+    this.handleResize();
+    document.body.dataset.quality = quality;
+  }
+
+  private applyMaterialQuality(): void {
+    const coverage = RENDER_QUALITY[this.renderQuality].samples > 0;
+    this.scene.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const material of materials) {
+        if (material.alphaTest > 0 && material.alphaToCoverage !== coverage) {
+          material.alphaToCoverage = coverage;
+          material.needsUpdate = true;
+        }
+      }
+    });
+  }
+
   private handleResize = () => {
     const w = this.container.clientWidth || window.innerWidth;
     const h = this.container.clientHeight || window.innerHeight;
-    const pr = this.isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2);
+    const pr = this.getRenderPixelRatio();
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setPixelRatio(pr);
@@ -3240,7 +3322,6 @@ export class RendaSceneEngine {
       this.composer.setPixelRatio(pr);
       this.composer.setSize(w, h);
     }
-    this.bloomPass?.setSize(w, h);
     if (this.colorGradePass) {
       this.colorGradePass.uniforms['uResolution'].value.set(w * pr, h * pr);
     }
@@ -3259,8 +3340,9 @@ export class RendaSceneEngine {
   };
 
   private handleKeyDown = (e: KeyboardEvent) => {
-    const tag = (e.target as HTMLElement | null)?.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+    if (target?.closest('button') && e.code !== 'Escape' && e.code !== 'KeyP') return;
 
     this.keys.add(e.code);
 
@@ -3398,7 +3480,7 @@ export class RendaSceneEngine {
     if (isFps && e.button === 0 && !this.pointerLocked) {
       this.fireWeapon();
       // Gently request Pointer Lock when supported on desktop interaction
-      if (!this.isSoftwareGl && typeof this.renderer.domElement.requestPointerLock === 'function') {
+      if (typeof this.renderer.domElement.requestPointerLock === 'function') {
         try {
           const maybePromise = this.renderer.domElement.requestPointerLock() as unknown as Promise<void> | undefined;
           if (maybePromise && typeof maybePromise.catch === 'function') {
@@ -3592,6 +3674,14 @@ export class RendaSceneEngine {
     this.fpsState = applyFpsRecoilImpulse(this.fpsState, this.fpsState.adsAlpha, this.fireJitterSeed);
     this.camPitch -= 0.0085 * (1 - this.fpsState.adsAlpha * 0.45);
     this.audio.playGunshot();
+    // Restrict collision queries to solid world geometry; foliage/sky/viewmodel are visual layers.
+    this.camera.updateMatrixWorld(true);
+    this.bulletImpacts.fire(this.camera, [
+      ...(this.terrainMesh ? [this.terrainMesh] : []),
+      ...this.interactableWalls,
+      ...this.roadAsphaltMeshes,
+      ...this.roadGravelMeshes,
+    ]);
 
     // Subtle muzzle smoke/spark particle in world space ahead of barrel
     this.weaponViewmodel.muzzleWorldAnchor.getWorldPosition(_v1);
@@ -3913,8 +4003,10 @@ export class RendaSceneEngine {
     }
 
     // Update sky-matched PBR reflections (skip repeated PMREM regeneration on SwiftShader for frame speed)
-    if (!this.isSoftwareGl || !this.skyEnvBuilt) {
+    const environmentName = preset === 'overcast_rain' || preset === 'noon' ? 'overcast_soil' : 'evening_field';
+    if (!this.outdoorEnvironments.has(environmentName) && (!this.skyEnvBuilt || this.skyEnvPreset !== preset)) {
       this.skyEnvBuilt = true;
+      this.skyEnvPreset = preset;
       const envScene = new THREE.Scene();
       const envSky = new Sky();
       envSky.scale.setScalar(100);
@@ -3933,6 +4025,7 @@ export class RendaSceneEngine {
       this.envRenderTarget = nextRt;
       this.scene.environment = nextRt.texture;
     }
+    this.applyOutdoorLighting();
 
     const snapped = snapShadowCenter(this.playerX, this.playerZ, this.shadowHalfExtent, this.shadowMapRes);
     this.sunLight.target.position.set(snapped.x, this.playerY, snapped.z);
@@ -3958,6 +4051,62 @@ export class RendaSceneEngine {
     (this.scene.fog as THREE.FogExp2).density = profile.fogDensity;
     this.renderNow();
     this.emitHud(true);
+  }
+
+  private loadOutdoorLighting(): void {
+    const loader = new HDRLoader();
+    for (const name of ['evening_field', 'overcast_soil']) {
+      loader.load(`/assets/lighting/${name}_1k.hdr`, (texture) => {
+        if (this.isDisposed) { texture.dispose(); return; }
+        const generator = new THREE.PMREMGenerator(this.renderer);
+        const target = generator.fromEquirectangular(texture);
+        generator.dispose();
+        texture.dispose();
+        this.outdoorEnvironments.set(name, target);
+        this.applyOutdoorLighting();
+      }, undefined, () => {
+        console.warn(`Outdoor lighting ${name} unavailable; using the procedural sky.`);
+      });
+    }
+    for (const name of ['evening_road_01_puresky', 'overcast_soil_puresky']) {
+      loader.load(`/assets/lighting/${name}_2k.hdr`, (texture) => {
+        if (this.isDisposed) { texture.dispose(); return; }
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        this.skyPanoramas.set(name, texture);
+        this.applyOutdoorLighting();
+      }, undefined, () => {
+        console.warn(`Photographic sky ${name} unavailable; using the procedural sky.`);
+      });
+    }
+  }
+
+  private applyOutdoorLighting(): void {
+    this.applyPhotographicSky();
+    const overcast = this.atmosphere === 'overcast_rain' || this.atmosphere === 'noon';
+    const target = this.outdoorEnvironments.get(overcast ? 'overcast_soil' : 'evening_field');
+    if (!target) {
+      this.scene.environment = this.envRenderTarget?.texture ?? null;
+      this.scene.environmentIntensity = 1;
+      this.scene.environmentRotation.set(0, 0, 0);
+      return;
+    }
+    this.scene.environment = target.texture;
+    this.scene.environmentIntensity = this.atmosphere === 'twilight' ? 0.32 : overcast ? 0.85 : 0.8;
+    this.scene.environmentRotation.y = (overcast ? -0.2056 : 0.6596117388)
+      - Math.atan2(this.sunDirUniform.value.z, this.sunDirUniform.value.x);
+  }
+
+  private applyPhotographicSky(): void {
+    const raining = this.atmosphere === 'overcast_rain';
+    const name = raining ? 'overcast_soil_puresky' : 'evening_road_01_puresky';
+    const panorama = this.atmosphere === 'noon' ? undefined : this.skyPanoramas.get(name);
+    this.scene.background = panorama ?? null;
+    this.sky.visible = !panorama;
+    if (this.cloudDome) this.cloudDome.visible = !panorama;
+    if (!panorama) return;
+    this.scene.backgroundIntensity = this.atmosphere === 'twilight' ? 0.28 : 0.85;
+    this.scene.backgroundRotation.y = (raining ? -0.20709 : 0.6028544496)
+      - Math.atan2(this.sunDirUniform.value.z, this.sunDirUniform.value.x);
   }
 
   public applyMaterialRecipe(
@@ -4949,6 +5098,7 @@ export class RendaSceneEngine {
   }
 
   private stepSimulation(dt: number, elapsed: number): void {
+    this.bulletImpacts.update(dt);
     this.windTimeUniform.value = elapsed;
     if (this.waterTexture) {
       this.waterTexture.offset.y -= dt * 0.28;
@@ -5608,14 +5758,18 @@ export class RendaSceneEngine {
       } else {
         if (sync) gl.deleteSync(sync);
         document.body.dataset.frameCount = String(this.frameCount);
-        this.frameId = window.setTimeout(cb, 240);
+        this.frameId = window.setTimeout(cb, 16);
       }
     };
     this.frameId = window.setTimeout(poll, 16);
   }
 
   private renderNow(): void {
-    if (!this.isSoftwareGl && this.composer) {
+    if (!this.readyToRender || !this.initialAssetsReady) return;
+    if (this.colorGradePass?.uniforms['uTime']) {
+      this.colorGradePass.uniforms['uTime'].value = performance.now() / 1000;
+    }
+    if (this.composer) {
       this.composer.render();
     } else {
       this.renderer.render(this.scene, this.camera);
@@ -5624,6 +5778,10 @@ export class RendaSceneEngine {
 
   private loop = (): void => {
     if (this.isDisposed) return;
+    if (!this.initialAssetsReady) {
+      this.frameId = window.setTimeout(this.loop, 100);
+      return;
+    }
     if (this.isSoftwareGl && document.body.dataset.pauseLoop === '1') {
       this.frameId = window.setTimeout(this.loop, 180);
       return;
@@ -5666,10 +5824,16 @@ export class RendaSceneEngine {
     this.groundCoverSystem?.dispose();
     this.villagePropsSystem?.dispose();
     this.controls.dispose();
+    for (const pass of this.composer?.passes ?? []) pass.dispose();
     this.composer?.dispose();
     this.composerRenderTarget?.dispose();
     this.weaponViewmodel.dispose();
+    this.bulletImpacts.dispose();
     this.envRenderTarget?.dispose();
+    for (const target of this.outdoorEnvironments.values()) target.dispose();
+    this.outdoorEnvironments.clear();
+    for (const texture of this.skyPanoramas.values()) texture.dispose();
+    this.skyPanoramas.clear();
     this.materialLib.dispose();
     if (this.archMaterials) {
       for (const m of this.archMaterials.materials) m.dispose();

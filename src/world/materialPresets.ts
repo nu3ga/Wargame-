@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import type { MaterialRecipe } from './types';
 
 export const GENERATED_TEXTURES = {
-  timber: '/src/assets/images/tex_kurzeme_timber_1794562129997.jpg',
-  clayRoof: '/src/assets/images/tex_clay_roof_1794562130368.jpg',
-  gravelRoad: '/src/assets/images/tex_gravel_cobble_1794562131023.jpg',
+  timber: new URL('../assets/images/tex_kurzeme_timber_1794562129997.jpg', import.meta.url).href,
+  clayRoof: new URL('../assets/images/tex_clay_roof_1794562130368.jpg', import.meta.url).href,
+  gravelRoad: new URL('../assets/images/tex_gravel_cobble_1794562131023.jpg', import.meta.url).href,
 } as const;
 
 export const WALL_PRESETS: MaterialRecipe[] = [
@@ -673,13 +673,13 @@ interface HostedPbrSet {
 const HOSTED_PBR_PRESETS: Record<string, HostedPbrSet> = {
   kurzeme_timber: { folder: 'weathered_brown_planks', tintHex: 0xe8c99d, repeatScale: 1.18, normalScale: 1.08, roughnessMul: 0.92, hasAo: true },
   moss_timber: { folder: 'weathered_brown_planks', tintHex: 0x9b8064, repeatScale: 1.18, normalScale: 1.15, roughnessMul: 0.96, hasAo: true },
-  lime_plaster: { folder: 'white_plaster_rough_02', tintHex: 0xf4eee0, repeatScale: 1.28, normalScale: 0.85, roughnessMul: 0.94, hasAo: true },
-  manor_ochre: { folder: 'painted_plaster_wall', tintHex: 0xe8cf96, repeatScale: 1.25, normalScale: 0.88, roughnessMul: 0.92, hasAo: true },
-  red_brick: { folder: 'red_brick_03', tintHex: 0xe6beb0, repeatScale: 1.16, normalScale: 1.18, roughnessMul: 0.94, hasAo: true },
-  fieldstone: { folder: 'rustic_stone_wall_02', tintHex: 0xd8d3c9, repeatScale: 1.14, normalScale: 1.28, roughnessMul: 0.96, hasAo: true },
+  lime_plaster: { folder: 'white_plaster_rough_02', tintHex: 0xf4eee0, repeatScale: 1.28, normalScale: 0.52, roughnessMul: 0.98, hasAo: true },
+  manor_ochre: { folder: 'painted_plaster_wall', tintHex: 0xe8cf96, repeatScale: 1.25, normalScale: 0.54, roughnessMul: 0.96, hasAo: true },
+  red_brick: { folder: 'red_brick_03', tintHex: 0xe6beb0, repeatScale: 1.16, normalScale: 0.92, roughnessMul: 0.98, hasAo: true },
+  fieldstone: { folder: 'rustic_stone_wall_02', tintHex: 0xd8d3c9, repeatScale: 1.14, normalScale: 1.06, roughnessMul: 0.98, hasAo: true },
   clay_tile: { folder: 'clay_roof_tiles_02', tintHex: 0xe0aa94, repeatScale: 1.15, normalScale: 1.18, roughnessMul: 0.88, hasAo: true },
-  crimson_manor: { folder: 'corrugated_iron', tintHex: 0x963234, repeatScale: 1.18, normalScale: 0.95, roughnessMul: 0.72, hasAo: true },
-  standing_seam: { folder: 'corrugated_iron', tintHex: 0x5d6e78, repeatScale: 1.18, normalScale: 0.95, roughnessMul: 0.65, hasAo: true },
+  crimson_manor: { folder: 'corrugated_iron', tintHex: 0x963234, repeatScale: 1.18, normalScale: 0.78, roughnessMul: 0.88, hasAo: true },
+  standing_seam: { folder: 'corrugated_iron', tintHex: 0x5d6e78, repeatScale: 1.18, normalScale: 0.78, roughnessMul: 0.84, hasAo: true },
   zinc_seam: { folder: 'corrugated_iron', tintHex: 0xbac0c4, repeatScale: 1.18, normalScale: 0.92, roughnessMul: 0.72, hasAo: true },
   weathered_brown: { folder: 'roof_07', tintHex: 0xc8c0b6, repeatScale: 1.1, normalScale: 1.12, roughnessMul: 0.92, hasAo: true },
   church_slate: { folder: 'roof_slates_03', tintHex: 0x737a80, repeatScale: 1.18, normalScale: 1.05, roughnessMul: 0.76, hasAo: true },
@@ -736,10 +736,17 @@ export class MaterialLibrary {
   }
 
   getMaterial(recipe: MaterialRecipe): THREE.MeshStandardMaterial {
-    const cacheKey = `${recipe.id}_${recipe.pattern}_${recipe.primaryHex}_${recipe.roughness}_${recipe.metalness}_${recipe.repeatX}_${recipe.repeatY}`;
+    const cacheKey = JSON.stringify([
+      recipe.id, recipe.pattern, recipe.primaryHex, recipe.secondaryHex, recipe.accentHex,
+      recipe.roughness, recipe.metalness, recipe.bumpScale, recipe.repeatX, recipe.repeatY,
+      recipe.weathering, recipe.grain,
+    ]);
     const existing = this.cache.get(cacheKey);
     if (existing) return existing;
 
+    // Paint, plaster, brick and timber are dielectric; only exposed metal conducts.
+    const paintedMetal = ['crimson_manor', 'standing_seam', 'church_slate'].includes(recipe.id);
+    const materialMetalness = paintedMetal ? 0.12 : recipe.metalness <= 0.1 ? 0 : Math.min(0.85, recipe.metalness);
     const hosted = HOSTED_PBR_PRESETS[recipe.id];
     if (hosted) {
       const rMul = hosted.repeatScale ?? 1.0;
@@ -761,8 +768,8 @@ export class MaterialLibrary {
         roughness: hosted.roughnessMul ?? 1.0,
         aoMap: aoTex ?? undefined,
         aoMapIntensity: aoTex ? 0.78 : 0,
-        metalness: Math.min(0.85, recipe.metalness),
-        envMapIntensity: recipe.metalness > 0.3 ? 1.15 : 0.72,
+        metalness: materialMetalness,
+        envMapIntensity: materialMetalness > 0.3 ? 0.95 : 0.65,
       });
       this.cache.set(cacheKey, mat);
       return mat;
@@ -802,8 +809,8 @@ export class MaterialLibrary {
       normalScale: new THREE.Vector2(nScale, nScale),
       roughnessMap: roughnessTex,
       roughness: 1.0,
-      metalness: Math.min(0.85, recipe.metalness),
-      envMapIntensity: recipe.metalness > 0.3 ? 1.15 : 0.72,
+      metalness: materialMetalness,
+      envMapIntensity: materialMetalness > 0.3 ? 0.95 : 0.65,
     });
 
     this.cache.set(cacheKey, mat);

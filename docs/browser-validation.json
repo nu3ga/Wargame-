@@ -1,0 +1,64 @@
+{
+  "browser": "Chromium, SwiftShader software WebGL2",
+  "viewport": "1024x640",
+  "checks": [
+    "initial asset loading",
+    "two HDR environments and two pure-sky panoramas",
+    "title keyboard quality selection",
+    "movement",
+    "shooting ammo",
+    "ADS",
+    "reload reserve accounting",
+    "tactical keyboard focus",
+    "weather activation",
+    "Escape closes map",
+    "three quality pipelines",
+    "saved quality preference",
+    "Cinematic AO and MSAA",
+    "river water view"
+  ],
+  "renders": [
+    {
+      "name": "renda-title",
+      "quality": "performance",
+      "frame": 148,
+      "calls": 2704,
+      "triangles": 6795801,
+      "points": 0,
+      "lines": 0,
+      "environmentIntensity": 0.8
+    },
+    {
+      "name": "renda-gameplay-performance",
+      "quality": "performance",
+      "frame": 152,
+      "calls": 1664,
+      "triangles": 8593631,
+      "points": 0,
+      "lines": 0,
+      "environmentIntensity": 0.8
+    },
+    {
+      "name": "renda-gameplay-cinematic",
+      "quality": "cinematic",
+      "frame": 174,
+      "calls": 2438,
+      "triangles": 10245164,
+      "points": 0,
+      "lines": 0,
+      "environmentIntensity": 0.8
+    },
+    {
+      "name": "renda-river-balanced",
+      "quality": "balanced",
+      "frame": 197,
+      "calls": 1303,
+      "triangles": 2868750,
+      "points": 0,
+      "lines": 0,
+      "environmentIntensity": 0.85
+    }
+  ],
+  "errors": [],
+  "failedRequests": []
+}

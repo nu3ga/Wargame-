@@ -896,7 +896,7 @@ export function enhanceOverhaulFoliageMaterial(
   sunDirUniform: { value: THREE.Vector3 },
   sunColorUniform: { value: THREE.Color }
 ): void {
-  mat.customProgramCacheKey = () => 'v6_aaa_foliage';
+  mat.customProgramCacheKey = () => 'v8_thin_leaf_foliage';
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uWindTime = windTimeUniform;
     shader.uniforms.uSunDir = sunDirUniform;
@@ -949,11 +949,12 @@ varying vec3 vFoliageWorldNormal;`
 vec3 sDirF = normalize(uSunDir);
 vec3 nF = normalize(vFoliageWorldNormal);
 float sunWrap = clamp((dot(nF, sDirF) + 0.35) / 1.35, 0.0, 1.0);
-float crownAO = mix(0.62, 1.04, sunWrap * 0.65 + clamp(nF.y * 0.5 + 0.5, 0.0, 1.0) * 0.35);
+float crownAO = mix(0.85, 1.0, sunWrap * 0.65 + clamp(nF.y * 0.5 + 0.5, 0.0, 1.0) * 0.35);
 outgoingLight *= crownAO;
 float backTransmit = pow(clamp(dot(viewDirF, -sDirF), 0.0, 1.0), 3.4);
-float skyBounce = 0.009 + 0.018 * max(0.0, sDirF.y) * clamp(nF.y * 0.5 + 0.5, 0.2, 1.0);
-outgoingLight += diffuseColor.rgb * uSunColor * (backTransmit * 0.20 + skyBounce);
+float thinLeafLight = pow(max(0.0, dot(-nF, sDirF)), 1.4) * 0.08;
+float skyBounce = 0.025 + 0.035 * max(0.0, sDirF.y) * clamp(nF.y * 0.5 + 0.5, 0.2, 1.0);
+outgoingLight += diffuseColor.rgb * uSunColor * (backTransmit * 0.09 + thinLeafLight + skyBounce);
 #include <opaque_fragment>`
       );
   };

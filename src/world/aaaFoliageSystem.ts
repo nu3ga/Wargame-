@@ -239,7 +239,8 @@ export function buildAaaTreeSystem(
   sunDirUniform: { value: THREE.Vector3 },
   sunColorUniform: { value: THREE.Color },
   isSoftwareGl: boolean,
-  maxAnisotropy: number
+  maxAnisotropy: number,
+  camera?: THREE.Camera
 ): { handle: AaaTreeSystemHandle; textures: THREE.Texture[] } {
   const textures: THREE.Texture[] = [];
   const texLoader = new THREE.TextureLoader();
@@ -352,6 +353,7 @@ export function buildAaaTreeSystem(
     variant: 0 | 1;
     items: TreeInstanceRecord[];
     positions: { x: number; z: number }[];
+    farWorldBounds: THREE.Sphere[];
     nearTrunk: THREE.InstancedMesh;
     nearLeaf: THREE.InstancedMesh;
     farTrunk: THREE.InstancedMesh;
@@ -383,12 +385,19 @@ export function buildAaaTreeSystem(
       (farTree.leavesMesh.material as THREE.Material).dispose();
 
       bucketGeometries.push(nearB, nearL, farB, farL);
+      const farBounds = farB.boundingSphere!.clone().union(farL.boundingSphere!);
+      const farWorldBounds = items.map((item) => {
+        const sphere = farBounds.clone().applyMatrix4(item.matrix);
+        // Cover branch/leaf wind displacement and movement between LOD refreshes.
+        sphere.radius += item.matrix.getMaxScaleOnAxis() * 0.6 + 3;
+        return sphere;
+      });
 
       const leafKey = `${species}_${variant}`;
       const leafMat = leafMats[leafKey];
       const depthMat = species === 'birch' || species === 'oak' ? depthMats[leafKey] : depthMats[species];
 
-      const nearCap = Math.min(items.length, isSoftwareGl ? 56 : 200);
+      const nearCap = Math.min(items.length, isSoftwareGl ? 20 : 200);
       const farCap = items.length;
 
       const nearTrunk = new THREE.InstancedMesh(nearB, barkMats[species], nearCap);
@@ -400,14 +409,15 @@ export function buildAaaTreeSystem(
       farLeaf.customDepthMaterial = depthMat;
 
       for (const im of [nearTrunk, farTrunk]) {
-        im.castShadow = !isSoftwareGl;
+        im.castShadow = im === nearTrunk && !isSoftwareGl;
         im.receiveShadow = true;
         im.frustumCulled = false;
       }
       nearLeaf.castShadow = !isSoftwareGl;
       nearLeaf.receiveShadow = !isSoftwareGl;
       nearLeaf.frustumCulled = false;
-      farLeaf.castShadow = !isSoftwareGl;
+      // Distant silhouettes contribute atmosphere without re-rendering into the shadow map.
+      farLeaf.castShadow = false;
       farLeaf.receiveShadow = false;
       farLeaf.frustumCulled = false;
 
@@ -422,6 +432,7 @@ export function buildAaaTreeSystem(
         variant,
         items,
         positions: items.map((it) => ({ x: it.x, z: it.z })),
+        farWorldBounds,
         nearTrunk,
         nearLeaf,
         farTrunk,
@@ -432,23 +443,49 @@ export function buildAaaTreeSystem(
 
   let lastLodX = Number.NaN;
   let lastLodZ = Number.NaN;
+  const viewFrustum = new THREE.Frustum();
+  const viewProjection = new THREE.Matrix4();
+  const viewDirection = new THREE.Vector3();
+  const lastViewDirection = new THREE.Vector3();
+  const cameraWorldPosition = new THREE.Vector3();
+  const cullingSphere = new THREE.Sphere();
+  const rotationRefreshCos = Math.cos(THREE.MathUtils.degToRad(3));
+  const rotationGuardRatio = Math.tan(THREE.MathUtils.degToRad(3.3));
+  let lastProjectionX = Number.NaN;
+  let lastProjectionY = Number.NaN;
 
   const updateLod = (camX: number, camZ: number, force = false) => {
-    if (!force && Number.isFinite(lastLodX)) {
+    let viewChanged = false;
+    if (camera) {
+      camera.updateWorldMatrix(true, false);
+      camera.getWorldDirection(viewDirection);
+      viewChanged = viewDirection.dot(lastViewDirection) < rotationRefreshCos
+        || camera.projectionMatrix.elements[0] !== lastProjectionX
+        || camera.projectionMatrix.elements[5] !== lastProjectionY;
+    }
+    if (!force && !viewChanged && Number.isFinite(lastLodX)) {
       const dx = camX - lastLodX;
       const dz = camZ - lastLodZ;
-      if (dx * dx + dz * dz < 144) return;
+      if (dx * dx + dz * dz < 9) return;
     }
     lastLodX = camX;
     lastLodZ = camZ;
+    if (camera) {
+      lastViewDirection.copy(viewDirection);
+      lastProjectionX = camera.projectionMatrix.elements[0];
+      lastProjectionY = camera.projectionMatrix.elements[5];
+      cameraWorldPosition.setFromMatrixPosition(camera.matrixWorld);
+      viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+      viewFrustum.setFromProjectionMatrix(viewProjection);
+    }
 
     for (const b of buckets) {
       const { nearIndices, farIndices } = partitionTreeInstancesByDistance3Tier(
         b.positions,
         camX,
         camZ,
-        DEFAULT_TREE_NEAR_M,
-        DEFAULT_TREE_MAX_DRAW_M
+        isSoftwareGl ? 72 : DEFAULT_TREE_NEAR_M,
+        isSoftwareGl ? 480 : DEFAULT_TREE_MAX_DRAW_M
       );
       let nCount = 0;
       let fCount = 0;
@@ -472,7 +509,15 @@ export function buildAaaTreeSystem(
       }
 
       for (let k = 0; k < farIndices.length; k++) {
-        const rec = b.items[farIndices[k]];
+        const itemIndex = farIndices[k];
+        if (camera) {
+          cullingSphere.copy(b.farWorldBounds[itemIndex]);
+          // Retain a small angular guard band so trees cannot pop at the view edge
+          // while the camera turns through the next 3-degree refresh interval.
+          cullingSphere.radius += cullingSphere.center.distanceTo(cameraWorldPosition) * rotationGuardRatio;
+          if (!viewFrustum.intersectsSphere(cullingSphere)) continue;
+        }
+        const rec = b.items[itemIndex];
         b.farTrunk.setMatrixAt(fCount, rec.matrix);
         b.farLeaf.setMatrixAt(fCount, rec.matrix);
         b.farTrunk.setColorAt(fCount, rec.barkColor);
@@ -556,12 +601,13 @@ function groundAndScaleByFootprintGeo(mesh: THREE.Mesh, targetWidthM = 0.9, sink
 }
 
 function buildMergedMultiMaterialFlower(
-  root: THREE.Object3D,
+  root: THREE.Object3D | null | undefined,
   targetHeightM = 0.44,
   sinkY = -0.015,
   maxAnisotropy = 4,
   windTimeUniform: { value: number }
 ): { geometry: THREE.BufferGeometry; materials: THREE.MeshStandardMaterial[] } | null {
+  if (!root) return null;
   root.updateMatrixWorld(true);
   const meshes: THREE.Mesh[] = [];
   root.traverse((obj) => {
@@ -823,6 +869,14 @@ export async function loadAaaGroundCoverAndProps(
   treeAnchors: { x: number; z: number }[] = []
 ): Promise<AaaGroundCoverHandle> {
   const loader = new GLTFLoader();
+  const loadOptionalModel = async (url: string) => {
+    try {
+      return await loader.loadAsync(url);
+    } catch (error) {
+      console.warn(`Unable to load ground cover ${url}; continuing with the remaining assets.`, error);
+      return null;
+    }
+  };
   const disposables: { dispose: () => void }[] = [];
   const dummy = new THREE.Object3D();
   const scratchMat = new THREE.Matrix4();
@@ -930,31 +984,32 @@ export async function loadAaaGroundCoverAndProps(
     flYellowGltf,
     flBlueGltf,
   ] = await Promise.all([
-    loader.loadAsync('/assets/foliage/models/grass.glb'),
-    loader.loadAsync('/assets/foliage/grass_medium_01/grass_medium_01_1k.gltf'),
-    loader.loadAsync('/assets/foliage/grass_bermuda_01/grass_bermuda_01_1k.gltf'),
-    loader.loadAsync('/assets/foliage/fern_02/fern_02_1k.gltf'),
-    loader.loadAsync('/assets/foliage/shrub_02/shrub_02_1k.gltf'),
-    loader.loadAsync('/assets/foliage/shrub_03/shrub_03_1k.gltf'),
-    loader.loadAsync('/assets/foliage/shrub_04/shrub_04_1k.gltf'),
-    loader.loadAsync('/assets/foliage/grass_medium_02/grass_medium_02_1k.gltf'),
-    loader.loadAsync('/assets/foliage/nettle_plant/nettle_plant_1k.gltf'),
-    loader.loadAsync('/assets/foliage/celandine_01/celandine_01_1k.gltf'),
-    loader.loadAsync('/assets/foliage/weed_plant_02/weed_plant_02_1k.gltf'),
-    loader.loadAsync('/assets/foliage/dandelion_01/dandelion_01_1k.gltf'),
-    loader.loadAsync('/assets/foliage/periwinkle_plant/periwinkle_plant_1k.gltf'),
-    loader.loadAsync('/assets/foliage/moss_01/moss_01_1k.gltf'),
-    loader.loadAsync('/assets/foliage/tree_stump_01/tree_stump_01_1k.gltf'),
-    loader.loadAsync('/assets/foliage/dry_branches_medium_01/dry_branches_medium_01_1k.gltf'),
-    loader.loadAsync('/assets/foliage/dead_tree_trunk/dead_tree_trunk_1k.gltf'),
-    loader.loadAsync('/assets/foliage/rock_moss_set_01/rock_moss_set_01_1k.gltf'),
-    loader.loadAsync('/assets/foliage/rock_07/rock_07_1k.gltf'),
-    loader.loadAsync('/assets/foliage/models/flower_white.glb'),
-    loader.loadAsync('/assets/foliage/models/flower_yellow.glb'),
-    loader.loadAsync('/assets/foliage/models/flower_blue.glb'),
+    loadOptionalModel('/assets/foliage/models/grass.glb'),
+    loadOptionalModel('/assets/foliage/grass_medium_01/grass_medium_01_1k.gltf'),
+    loadOptionalModel('/assets/foliage/grass_bermuda_01/grass_bermuda_01_1k.gltf'),
+    loadOptionalModel('/assets/foliage/fern_02/fern_02_1k.gltf'),
+    loadOptionalModel('/assets/foliage/shrub_02/shrub_02_1k.gltf'),
+    loadOptionalModel('/assets/foliage/shrub_03/shrub_03_1k.gltf'),
+    loadOptionalModel('/assets/foliage/shrub_04/shrub_04_1k.gltf'),
+    loadOptionalModel('/assets/foliage/grass_medium_02/grass_medium_02_1k.gltf'),
+    loadOptionalModel('/assets/foliage/nettle_plant/nettle_plant_1k.gltf'),
+    loadOptionalModel('/assets/foliage/celandine_01/celandine_01_1k.gltf'),
+    loadOptionalModel('/assets/foliage/weed_plant_02/weed_plant_02_1k.gltf'),
+    loadOptionalModel('/assets/foliage/dandelion_01/dandelion_01_1k.gltf'),
+    loadOptionalModel('/assets/foliage/periwinkle_plant/periwinkle_plant_1k.gltf'),
+    loadOptionalModel('/assets/foliage/moss_01/moss_01_1k.gltf'),
+    loadOptionalModel('/assets/foliage/tree_stump_01/tree_stump_01_1k.gltf'),
+    loadOptionalModel('/assets/foliage/dry_branches_medium_01/dry_branches_medium_01_1k.gltf'),
+    loadOptionalModel('/assets/foliage/dead_tree_trunk/dead_tree_trunk_1k.gltf'),
+    loadOptionalModel('/assets/foliage/rock_moss_set_01/rock_moss_set_01_1k.gltf'),
+    loadOptionalModel('/assets/foliage/rock_07/rock_07_1k.gltf'),
+    loadOptionalModel('/assets/foliage/models/flower_white.glb'),
+    loadOptionalModel('/assets/foliage/models/flower_yellow.glb'),
+    loadOptionalModel('/assets/foliage/models/flower_blue.glb'),
   ]);
 
-  const extractMeshes = (root: THREE.Object3D): THREE.Mesh[] => {
+  const extractMeshes = (root: THREE.Object3D | null | undefined): THREE.Mesh[] => {
+    if (!root) return [];
     root.updateMatrixWorld(true);
     const list: THREE.Mesh[] = [];
     root.traverse((obj) => {
@@ -977,7 +1032,8 @@ export async function loadAaaGroundCoverAndProps(
   applyAaaGrassBladeShader(bladeGrassMat, windTimeUniform, sunDirUniform, sunColorUniform);
   disposables.push(bladeGrassGeo, bladeGrassMat);
 
-  const MAX_BLADE_GRASS = isSoftwareGl ? 2800 : 22000;
+  // CPU rasterizers need a genuinely bounded near-field carpet; desktop GPU budgets stay intact.
+  const MAX_BLADE_GRASS = isSoftwareGl ? 900 : 22000;
   const bladeGrassIm = new THREE.InstancedMesh(bladeGrassGeo, bladeGrassMat, MAX_BLADE_GRASS);
   bladeGrassIm.frustumCulled = false;
   bladeGrassIm.receiveShadow = true;
@@ -988,7 +1044,7 @@ export async function loadAaaGroundCoverAndProps(
 
   // Low-profile 3D short-cut turf clusters filling road verges, trimmed yards, and non-tall-grass zones
   const shortTurfGeo = createCurvedGrassClusterGeometry(10, 0.62, 0.06, 0.14);
-  const MAX_SHORT_TURF = isSoftwareGl ? 2200 : 12000;
+  const MAX_SHORT_TURF = isSoftwareGl ? 700 : 12000;
   const shortTurfIm = new THREE.InstancedMesh(shortTurfGeo, bladeGrassMat, MAX_SHORT_TURF);
   shortTurfIm.frustumCulled = false;
   shortTurfIm.receiveShadow = true;
@@ -998,12 +1054,17 @@ export async function loadAaaGroundCoverAndProps(
   disposables.push(shortTurfGeo);
   scene.add(shortTurfIm);
 
-  const grassSrc = extractMeshes(grassGltf.scene)[0];
-  const grassGeo = groundAndScaleMeshGeo(grassSrc, 0.54, -0.025);
-  const srcGrassMat = (Array.isArray(grassSrc.material) ? grassSrc.material[0] : grassSrc.material) as THREE.MeshStandardMaterial;
-  if (srcGrassMat.map) srcGrassMat.map.anisotropy = maxAnisotropy;
+  const grassSrc = extractMeshes(grassGltf?.scene)[0];
+  // The procedural carpet remains available if the optional grass model fails to download.
+  const grassGeo = grassSrc
+    ? groundAndScaleMeshGeo(grassSrc, 0.54, -0.025)
+    : createCurvedGrassClusterGeometry(12, 0.54, 0.1, 0.32);
+  const srcGrassMat = grassSrc
+    ? (Array.isArray(grassSrc.material) ? grassSrc.material[0] : grassSrc.material) as THREE.MeshStandardMaterial
+    : null;
+  if (srcGrassMat?.map) srcGrassMat.map.anisotropy = maxAnisotropy;
   const grassMat = new THREE.MeshStandardMaterial({
-    map: srcGrassMat.map,
+    map: srcGrassMat?.map ?? null,
     alphaTest: 0.38,
     transparent: false,
     side: THREE.DoubleSide,
@@ -1014,7 +1075,7 @@ export async function loadAaaGroundCoverAndProps(
   applyGroundSwayShader(grassMat, windTimeUniform, 0.25, 'v6_grass_sway');
   disposables.push(grassGeo, grassMat);
 
-  const MAX_GRASS_STREAM = isSoftwareGl ? 2800 : 12000;
+  const MAX_GRASS_STREAM = isSoftwareGl ? 600 : 12000;
   const grassIm = new THREE.InstancedMesh(grassGeo, grassMat, MAX_GRASS_STREAM);
   grassIm.frustumCulled = false;
   grassIm.receiveShadow = true;
@@ -1070,13 +1131,13 @@ export async function loadAaaGroundCoverAndProps(
     return out;
   };
 
-  const medGrassMeshes = extractMeshes(grassMedGltf.scene)
+  const medGrassMeshes = extractMeshes(grassMedGltf?.scene)
     .filter((m) => {
       const tris = (m.geometry.index?.count ?? 0) / 3;
       return tris >= 240 && tris <= 900;
     })
     .slice(0, 4);
-  const medGrassIms = createStreamVariantMeshes(medGrassMeshes, isSoftwareGl ? 700 : 2400, {
+  const medGrassIms = createStreamVariantMeshes(medGrassMeshes, isSoftwareGl ? 100 : 2400, {
     footprintM: 0.68,
     sinkY: -0.02,
     alphaTest: 0.34,
@@ -1086,7 +1147,7 @@ export async function loadAaaGroundCoverAndProps(
     swayKey: 'v6_med_grass',
   });
 
-  const bermudaMeshes = extractMeshes(bermudaGltf.scene)
+  const bermudaMeshes = extractMeshes(bermudaGltf?.scene)
     .filter((m) => {
       m.geometry.computeBoundingBox();
       const bb = m.geometry.boundingBox!;
@@ -1097,7 +1158,7 @@ export async function loadAaaGroundCoverAndProps(
     })
     .sort((a, b) => (b.geometry.index?.count ?? 0) - (a.geometry.index?.count ?? 0))
     .slice(0, 4);
-  const bermudaIms = createStreamVariantMeshes(bermudaMeshes, isSoftwareGl ? 900 : 3000, {
+  const bermudaIms = createStreamVariantMeshes(bermudaMeshes, isSoftwareGl ? 120 : 3000, {
     footprintM: 0.72,
     sinkY: -0.015,
     alphaTest: 0.32,
@@ -1107,8 +1168,8 @@ export async function loadAaaGroundCoverAndProps(
     swayKey: 'v6_bermuda_grass',
   });
 
-  const herbCap = isSoftwareGl ? 150 : 350;
-  const dandelionMeshes = extractMeshes(dandelionGltf.scene)
+  const herbCap = isSoftwareGl ? 24 : 350;
+  const dandelionMeshes = extractMeshes(dandelionGltf?.scene)
     .sort((a, b) => (a.geometry.index?.count ?? 0) - (b.geometry.index?.count ?? 0))
     .slice(0, 3);
   const dandelionIms = createStreamVariantMeshes(dandelionMeshes, herbCap, {
@@ -1121,7 +1182,7 @@ export async function loadAaaGroundCoverAndProps(
     swayKey: 'v7_dandelion',
   });
 
-  const periwinkleMeshes = extractMeshes(periwinkleGltf.scene)
+  const periwinkleMeshes = extractMeshes(periwinkleGltf?.scene)
     .sort((a, b) => (a.geometry.index?.count ?? 0) - (b.geometry.index?.count ?? 0))
     .slice(0, 3);
   const periwinkleIms = createStreamVariantMeshes(periwinkleMeshes, herbCap, {
@@ -1134,7 +1195,7 @@ export async function loadAaaGroundCoverAndProps(
     swayKey: 'v7_periwinkle',
   });
 
-  const celandineMeshes = extractMeshes(celandineGltf.scene)
+  const celandineMeshes = extractMeshes(celandineGltf?.scene)
     .sort((a, b) => (a.geometry.index?.count ?? 0) - (b.geometry.index?.count ?? 0))
     .slice(0, 3);
   const celandineIms = createStreamVariantMeshes(celandineMeshes, herbCap, {
@@ -1147,7 +1208,7 @@ export async function loadAaaGroundCoverAndProps(
     swayKey: 'v6_celandine',
   });
 
-  const nettleMeshes = extractMeshes(nettleGltf.scene)
+  const nettleMeshes = extractMeshes(nettleGltf?.scene)
     .sort((a, b) => (a.geometry.index?.count ?? 0) - (b.geometry.index?.count ?? 0))
     .slice(0, 3);
   const nettleIms = createStreamVariantMeshes(nettleMeshes, herbCap, {
@@ -1160,7 +1221,7 @@ export async function loadAaaGroundCoverAndProps(
     swayKey: 'v6_nettle',
   });
 
-  const weedMeshes = extractMeshes(weedGltf.scene)
+  const weedMeshes = extractMeshes(weedGltf?.scene)
     .sort((a, b) => (a.geometry.index?.count ?? 0) - (b.geometry.index?.count ?? 0))
     .slice(0, 3);
   const weedIms = createStreamVariantMeshes(weedMeshes, herbCap, {
@@ -1204,7 +1265,7 @@ export async function loadAaaGroundCoverAndProps(
 
   for (let fi = 0; fi < flowerPacks.length; fi++) {
     const built = buildMergedMultiMaterialFlower(
-      flowerPacks[fi].scene,
+      flowerPacks[fi]?.scene,
       0.46,
       -0.015,
       maxAnisotropy,
@@ -1223,7 +1284,7 @@ export async function loadAaaGroundCoverAndProps(
     disposables.push(built.geometry, ...built.materials);
 
     // Streamed meadow wildflowers
-    const streamIm = new THREE.InstancedMesh(built.geometry, built.materials, 750);
+    const streamIm = new THREE.InstancedMesh(built.geometry, built.materials, isSoftwareGl ? 36 : 750);
     streamIm.frustumCulled = false;
     streamIm.count = 0;
     scene.add(streamIm);
@@ -1769,7 +1830,7 @@ export async function loadAaaGroundCoverAndProps(
       });
     }
   }
-  const fernMeshes = extractMeshes(fernGltf.scene)
+  const fernMeshes = extractMeshes(fernGltf?.scene)
     .sort((a, b) => (a.geometry.index?.count ?? 0) - (b.geometry.index?.count ?? 0))
     .slice(0, 2);
   registerCulledStaticVariants(
@@ -1790,7 +1851,7 @@ export async function loadAaaGroundCoverAndProps(
       alphaTest: 0.36,
       useFoliageSubsurface: true,
       castShadow: true,
-      maxDrawDistM: 220,
+      maxDrawDistM: isSoftwareGl ? 55 : 220,
       shadowDistM: 90,
     }
   );
@@ -1828,7 +1889,7 @@ export async function loadAaaGroundCoverAndProps(
       tint: new THREE.Color().setHSL(0.26 + (rand() - 0.5) * 0.04, 0.2, 0.8 + rand() * 0.16),
     });
   }
-  const mossMeshes = extractMeshes(mossGltf.scene).slice(0, 5);
+  const mossMeshes = extractMeshes(mossGltf?.scene).slice(0, 5);
   registerCulledStaticVariants(mossMeshes, mossCoords, {
     footprintM: 0.55,
     sinkY: -0.01,
@@ -1836,7 +1897,7 @@ export async function loadAaaGroundCoverAndProps(
     alphaTest: 0.3,
     roughness: 0.9,
     swayAmp: 0,
-    maxDrawDistM: 165,
+    maxDrawDistM: isSoftwareGl ? 32 : 165,
     shadowDistM: 0,
   });
 
@@ -1860,13 +1921,13 @@ export async function loadAaaGroundCoverAndProps(
       tint: new THREE.Color(0xffffff),
     });
   }
-  registerCulledStaticVariants(extractMeshes(stumpGltf.scene), stumpCoords, {
+  registerCulledStaticVariants(extractMeshes(stumpGltf?.scene), stumpCoords, {
     heightM: 0.68,
     sinkY: -0.08,
     roughness: 0.92,
     swayAmp: 0,
     castShadow: true,
-    maxDrawDistM: isSoftwareGl ? 130 : 250,
+    maxDrawDistM: isSoftwareGl ? 75 : 250,
     shadowDistM: 100,
   });
 
@@ -1889,13 +1950,13 @@ export async function loadAaaGroundCoverAndProps(
       tint: new THREE.Color().setHSL(0.08, 0.1, 0.88 + rand() * 0.14),
     });
   }
-  registerCulledStaticVariants(extractMeshes(branchesGltf.scene), branchCoords, {
+  registerCulledStaticVariants(extractMeshes(branchesGltf?.scene), branchCoords, {
     footprintM: 1.9,
     sinkY: -0.03,
     roughness: 0.92,
     swayAmp: 0,
     castShadow: true,
-    maxDrawDistM: isSoftwareGl ? 120 : 185,
+    maxDrawDistM: isSoftwareGl ? 55 : 185,
     shadowDistM: 80,
   });
 
@@ -1920,20 +1981,20 @@ export async function loadAaaGroundCoverAndProps(
       tint: new THREE.Color().setHSL(0.09, 0.08, 0.86 + rand() * 0.14),
     });
   }
-  registerCulledStaticVariants(extractMeshes(deadTrunkGltf.scene).slice(0, 2), trunkCoords, {
+  registerCulledStaticVariants(extractMeshes(deadTrunkGltf?.scene).slice(0, 2), trunkCoords, {
     footprintM: 3.6,
     sinkY: -0.14,
     roughness: 0.92,
     swayAmp: 0,
     castShadow: true,
-    maxDrawDistM: isSoftwareGl ? 130 : 300,
+    maxDrawDistM: isSoftwareGl ? 110 : 300,
     shadowDistM: 120,
   });
 
   // 3. Photoscanned Broadleaf Shrubs combining optimized shrub_03 (60%), shrub_02 (30%) & hero shrub_04 (10%)
-  const shrubMeshes02 = extractMeshes(shrub02Gltf.scene);
-  const shrubMeshes03 = extractMeshes(shrub03Gltf.scene);
-  const shrubMeshes04 = extractMeshes(shrub04Gltf.scene);
+  const shrubMeshes02 = extractMeshes(shrub02Gltf?.scene);
+  const shrubMeshes03 = extractMeshes(shrub03Gltf?.scene);
+  const shrubMeshes04 = extractMeshes(shrub04Gltf?.scene);
   const sSplit1 = Math.ceil(shrubs.length * 0.6);
   const sSplit2 = Math.ceil(shrubs.length * 0.9);
   registerCulledStaticVariants(
@@ -1946,7 +2007,7 @@ export async function loadAaaGroundCoverAndProps(
       alphaTest: 0.4,
       useFoliageSubsurface: true,
       castShadow: true,
-      maxDrawDistM: isSoftwareGl ? 200 : 380,
+      maxDrawDistM: isSoftwareGl ? 120 : 380,
       shadowDistM: 125,
     }
   );
@@ -1960,7 +2021,7 @@ export async function loadAaaGroundCoverAndProps(
       alphaTest: 0.38,
       useFoliageSubsurface: true,
       castShadow: true,
-      maxDrawDistM: isSoftwareGl ? 115 : 300,
+      maxDrawDistM: isSoftwareGl ? 85 : 300,
       shadowDistM: 120,
     }
   );
@@ -1974,13 +2035,13 @@ export async function loadAaaGroundCoverAndProps(
       alphaTest: 0.38,
       useFoliageSubsurface: true,
       castShadow: true,
-      maxDrawDistM: isSoftwareGl ? 60 : 140,
+      maxDrawDistM: isSoftwareGl ? 45 : 140,
       shadowDistM: 80,
     }
   );
 
   // 4. Riverbank & Verge Sedges (grass_medium_02_1k.gltf)
-  const sedgeMeshes = extractMeshes(sedgeGltf.scene)
+  const sedgeMeshes = extractMeshes(sedgeGltf?.scene)
     .sort((a, b) => (a.geometry.index?.count ?? 0) - (b.geometry.index?.count ?? 0))
     .slice(0, 3);
   registerCulledStaticVariants(
@@ -1993,17 +2054,17 @@ export async function loadAaaGroundCoverAndProps(
       alphaTest: 0.36,
       swayAmp: 0.22,
       swayKey: 'v6_sedge_sway',
-      maxDrawDistM: 260,
+      maxDrawDistM: isSoftwareGl ? 70 : 260,
       shadowDistM: 0,
     }
   );
 
   // 5. Photoscanned Mossy River & Gorge Dolomite Boulders combining rock_moss_set_01 & rock_07
   const rockMeshes = [
-    ...extractMeshes(rockGltf.scene)
+    ...extractMeshes(rockGltf?.scene)
       .sort((a, b) => (a.geometry.index?.count ?? 0) - (b.geometry.index?.count ?? 0))
       .slice(0, 2),
-    ...extractMeshes(rock07Gltf.scene).slice(0, 2),
+    ...extractMeshes(rock07Gltf?.scene).slice(0, 2),
   ];
   if (rockMeshes.length > 0 && boulders.length > 0) {
     const perVar = Math.ceil(boulders.length / rockMeshes.length);
@@ -2049,7 +2110,7 @@ export async function loadAaaGroundCoverAndProps(
         coords,
         matrices,
         colors,
-        maxDrawDistM: 400,
+        maxDrawDistM: isSoftwareGl ? 180 : 400,
         fadeStartRatio: 0.85,
         shadowDistM: 130,
         baseCastShadow: true,
@@ -2058,7 +2119,7 @@ export async function loadAaaGroundCoverAndProps(
   }
 
   // 6. Small 3D roadside gravel & verge stones along primary/gravel road shoulders
-  const pebbleMeshes = extractMeshes(rock07Gltf.scene).slice(0, 2);
+  const pebbleMeshes = extractMeshes(rock07Gltf?.scene).slice(0, 2);
   if (pebbleMeshes.length > 0) {
     const pebbleSpots: SpotItem[] = [];
     for (const r of world.roads) {
@@ -2100,7 +2161,7 @@ export async function loadAaaGroundCoverAndProps(
       roughness: 0.94,
       swayAmp: 0,
       castShadow: false,
-      maxDrawDistM: isSoftwareGl ? 70 : 125,
+      maxDrawDistM: isSoftwareGl ? 30 : 125,
       shadowDistM: 0,
     });
   }
@@ -2124,12 +2185,12 @@ export async function loadAaaGroundCoverAndProps(
 
   const updateLod = (camX: number, camZ: number, force = false) => {
     const movedGrass =
-      force || !Number.isFinite(lastGrassX) || Math.hypot(camX - lastGrassX, camZ - lastGrassZ) >= 5.0;
+      force || !Number.isFinite(lastGrassX) || Math.hypot(camX - lastGrassX, camZ - lastGrassZ) >= 1.5;
     if (movedGrass) {
       lastGrassX = camX;
       lastGrassZ = camZ;
 
-      const outerRadius = isSoftwareGl ? 68 : DEFAULT_GRASS_STREAM_OUTER_M;
+      const outerRadius = isSoftwareGl ? 42 : DEFAULT_GRASS_STREAM_OUTER_M;
       const cells = collectCellCoordsInRadius(camX, camZ, CELL_SIZE_M, outerRadius);
       let bladeIdx = 0;
       let shortIdx = 0;
@@ -2143,11 +2204,12 @@ export async function loadAaaGroundCoverAndProps(
       weedCounts.fill(0);
       flowerCounts.fill(0);
 
-      const innerBladeCut = isSoftwareGl ? 28 : 36;
+      const innerBladeCut = isSoftwareGl ? 16 : 36;
       const innerBladeCutSq = innerBladeCut * innerBladeCut;
-      const innerGrassCut = isSoftwareGl ? 40 : 52;
+      const innerGrassCut = isSoftwareGl ? 22 : 52;
       const innerGrassCutSq = innerGrassCut * innerGrassCut;
-      const herbCutSq = (isSoftwareGl ? 44 : 66) * (isSoftwareGl ? 44 : 66);
+      const herbCut = isSoftwareGl ? 28 : 66;
+      const herbCutSq = herbCut * herbCut;
       const outerMaxSq = outerRadius * outerRadius;
 
       for (let ci = 0; ci < cells.length; ci++) {
@@ -2202,7 +2264,7 @@ export async function loadAaaGroundCoverAndProps(
             const idx = medCounts[p.variant];
             if (idx >= im.instanceMatrix.count) continue;
             const dist = Math.sqrt(d2);
-            const fade = computeDrawDistanceFade(dist, 76, DEFAULT_GRASS_STREAM_OUTER_M);
+            const fade = computeDrawDistanceFade(dist, isSoftwareGl ? 30 : 76, outerRadius);
             if (fade <= 0.04) continue;
             dummy.position.set(p.x, p.y, p.z);
             dummy.rotation.set(0, p.yaw, 0);
@@ -2217,7 +2279,7 @@ export async function loadAaaGroundCoverAndProps(
             const idx = bermudaCounts[p.variant];
             if (idx >= im.instanceMatrix.count) continue;
             const dist = Math.sqrt(d2);
-            const fade = computeDrawDistanceFade(dist, 74, DEFAULT_GRASS_STREAM_OUTER_M);
+            const fade = computeDrawDistanceFade(dist, isSoftwareGl ? 30 : 74, outerRadius);
             if (fade <= 0.04) continue;
             dummy.position.set(p.x, p.y, p.z);
             dummy.rotation.set(0, p.yaw, 0);
@@ -2228,7 +2290,7 @@ export async function loadAaaGroundCoverAndProps(
             bermudaCounts[p.variant] = idx + 1;
           } else if (d2 <= herbCutSq) {
             const dist = Math.sqrt(d2);
-            const fade = computeDrawDistanceFade(dist, 46, 66);
+            const fade = computeDrawDistanceFade(dist, isSoftwareGl ? 20 : 46, herbCut);
             if (fade <= 0.05) continue;
 
             let im: THREE.InstancedMesh | undefined;
@@ -2338,7 +2400,7 @@ export async function loadAaaGroundCoverAndProps(
     }
 
     const movedStatic =
-      force || !Number.isFinite(lastStaticX) || Math.hypot(camX - lastStaticX, camZ - lastStaticZ) >= 9.0;
+      force || !Number.isFinite(lastStaticX) || Math.hypot(camX - lastStaticX, camZ - lastStaticZ) >= 3.0;
     if (movedStatic) {
       lastStaticX = camX;
       lastStaticZ = camZ;

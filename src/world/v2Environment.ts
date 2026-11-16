@@ -27,18 +27,19 @@ export function createAbavaWaterMaterial(
 ): THREE.MeshPhysicalMaterial {
   const mat = new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
-    roughness: 0.06,
-    metalness: 0.06,
-    clearcoat: 1.0,
-    clearcoatRoughness: 0.04,
-    reflectivity: 0.94,
+    roughness: 0.12,
+    metalness: 0,
+    ior: 1.333,
+    clearcoat: 0.35,
+    clearcoatRoughness: 0.08,
+    reflectivity: 0.5,
     side: THREE.DoubleSide,
     polygonOffset: true,
     polygonOffsetFactor: -2,
     polygonOffsetUnits: -2,
   });
 
-  mat.customProgramCacheKey = () => 'v3_abava_water';
+  mat.customProgramCacheKey = () => 'v6_abava_water_dielectric';
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uWaterTime = timeUniform;
     shader.uniforms.uSunDir = sunDirUniform;
@@ -101,15 +102,15 @@ float waterWaveHeight(vec2 xz, float t) {
         `#include <map_fragment>
 float bankFactor = abs(vWaterUv.x * 2.0 - 1.0);
 float centerDepth = 1.0 - smoothstep(0.28, 0.98, bankFactor);
-vec3 deepKurland = vec3(0.045, 0.135, 0.148);
-vec3 shallowBank = vec3(0.155, 0.235, 0.195);
+vec3 deepKurland = vec3(0.024, 0.065, 0.064);
+vec3 shallowBank = vec3(0.105, 0.132, 0.090);
 vec3 baseWaterCol = mix(shallowBank, deepKurland, centerDepth);
 float causticBand = wNoise(vWaterWorldPos.xz * 2.8 + vec2(uWaterTime * 0.6, -uWaterTime * 0.9)) * wNoise(vWaterWorldPos.xz * 3.4 - vec2(uWaterTime * 0.5, uWaterTime * 0.4));
 baseWaterCol += vec3(0.06, 0.08, 0.05) * smoothstep(0.28, 0.72, causticBand) * (1.0 - centerDepth * 0.7);
 float foamNoise = wNoise(vWaterWorldPos.xz * 2.6 + vec2(uWaterTime * 0.58, -uWaterTime * 0.85));
 float bankFoam = smoothstep(0.82, 0.99, bankFactor) * smoothstep(0.42, 0.84, foamNoise);
-float riffleFoam = smoothstep(0.75, 0.95, wNoise(vWaterWorldPos.xz * 1.85 - vec2(0.0, uWaterTime * 1.15))) * 0.15;
-diffuseColor.rgb = mix(baseWaterCol, vec3(0.82, 0.89, 0.90), clamp(bankFoam * 0.72 + riffleFoam, 0.0, 0.8));`
+float riffleFoam = smoothstep(0.75, 0.95, wNoise(vWaterWorldPos.xz * 1.85 - vec2(0.0, uWaterTime * 1.15))) * 0.06;
+diffuseColor.rgb = mix(baseWaterCol, vec3(0.62, 0.68, 0.64), clamp(bankFoam * 0.28 + riffleFoam, 0.0, 0.42));`
       )
       .replace(
         '#include <normal_fragment_maps>',
@@ -118,7 +119,7 @@ float eps = 0.14;
 float hC = waterWaveHeight(vWaterWorldPos.xz, uWaterTime);
 float hX = waterWaveHeight(vWaterWorldPos.xz + vec2(eps, 0.0), uWaterTime);
 float hZ = waterWaveHeight(vWaterWorldPos.xz + vec2(0.0, eps), uWaterTime);
-vec3 worldRippleN = normalize(vec3((hC - hX) * 0.72, 1.0, (hC - hZ) * 0.72));
+vec3 worldRippleN = normalize(vec3((hC - hX) * 0.48, 1.0, (hC - hZ) * 0.48));
 vec3 viewRippleN = normalize((viewMatrix * vec4(worldRippleN, 0.0)).xyz);
 normal = normalize(mix(normal, viewRippleN, 0.82));`
       )
@@ -130,16 +131,16 @@ clearcoatNormal = normalize(mix(clearcoatNormal, normal, 0.84));`
       .replace(
         '#include <opaque_fragment>',
         `vec3 viewDirW = normalize(cameraPosition - vWaterWorldPos);
-vec3 worldRippleRefl = normalize(vec3((hC - hX) * 0.68, 1.0, (hC - hZ) * 0.68));
+vec3 worldRippleRefl = normalize(vec3((hC - hX) * 0.48, 1.0, (hC - hZ) * 0.48));
 float NdotV = clamp(dot(worldRippleRefl, viewDirW), 0.001, 1.0);
-float fresnel = 0.035 + 0.965 * pow(1.0 - NdotV, 4.2);
+float fresnel = 0.0204 + 0.9796 * pow(1.0 - NdotV, 5.0);
 vec3 reflDir = reflect(-viewDirW, worldRippleRefl);
 float skyMix = smoothstep(-0.06, 0.55, reflDir.y);
 vec3 envRefl = mix(uHorizonColor * 0.94, uSkyColor * 1.12, skyMix);
 vec3 sunLightDir = normalize(uSunDir);
 vec3 halfVec = normalize(sunLightDir + viewDirW);
-float sunSpec = pow(max(dot(worldRippleRefl, halfVec), 0.0), 380.0) * 2.25;
-float sunGlow = pow(max(dot(worldRippleRefl, halfVec), 0.0), 38.0) * 0.22;
+float sunSpec = pow(max(dot(worldRippleRefl, halfVec), 0.0), 520.0) * 0.95;
+float sunGlow = pow(max(dot(worldRippleRefl, halfVec), 0.0), 52.0) * 0.07;
 outgoingLight = mix(outgoingLight, envRefl, fresnel * 0.75) + uSunColor * (sunSpec + sunGlow);
 #include <opaque_fragment>`
       );
@@ -230,7 +231,7 @@ if (detailWeight > 0.01) {
   if (greenness > 0.04) {
     vec3 texShortGrass = (useDualTap
       ? mix(texture2D(uTerrainShortGrassMap, tUvA).rgb, texture2D(uTerrainShortGrassMap, tUvB).rgb, 0.36)
-      : texture2D(uTerrainShortGrassMap, tUvA).rgb) * vec3(0.90, 1.09, 0.82);
+      : texture2D(uTerrainShortGrassMap, tUvA).rgb) * vec3(0.96, 1.01, 0.94);
     vec3 texLushGrass = useDualTap
       ? mix(texture2D(uTerrainGrassMap, tUvA * 0.78).rgb, texture2D(uTerrainGrassMap, tUvB * 0.84).rgb, 0.38)
       : texture2D(uTerrainGrassMap, tUvA * 0.78).rgb;
@@ -288,7 +289,7 @@ if (normalTexFade > 0.01) {
     vec3 tnCliff = texture2D(uTerrainCliffNormal, tnUvA * 0.48).xyz * 2.0 - 1.0;
     tFinalMapN = mix(tGroundN, tnCliff, tCliffN * 0.85);
   }
-  tPerturbW = vec3(tFinalMapN.x, 0.0, tFinalMapN.y) * 0.72 * normalTexFade;
+  tPerturbW = vec3(tFinalMapN.x, 0.0, tFinalMapN.y) * 0.52 * normalTexFade;
 }`
       : `float distFade = 1.0 - smoothstep(10.0, 72.0, length(vViewPosition));
 float tEps = 0.22;
@@ -582,7 +583,7 @@ export function enhanceRoadMaterial(
   const skyColU = skyColorUniform ?? { value: new THREE.Color(0x6d98c2) };
   const horColU = horizonColorUniform ?? { value: new THREE.Color(0xd9c2a3) };
 
-  mat.customProgramCacheKey = () => `v4_road_${mode}_wet`;
+  mat.customProgramCacheKey = () => `v6_road_${mode}_wet`;
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uRoadWetness = wetU;
     shader.uniforms.uRoadSunDir = sunDirU;
@@ -766,6 +767,13 @@ roughnessFactor = clamp(roughnessFactor - wheelWear * 0.07, 0.52, 0.98);
 roughnessFactor = mix(roughnessFactor, 0.08, puddleMask);`
       )
       .replace(
+        '#include <normal_fragment_maps>',
+        `#include <normal_fragment_maps>
+// Accumulated rainwater fills the aggregate relief; dry asphalt retains its PBR normal.
+vec3 puddleNormalV = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+normal = normalize(mix(normal, puddleNormalV, puddleMask * 0.94));`
+      )
+      .replace(
         '#include <opaque_fragment>',
         `if (puddleMask > 0.02) {
   vec3 rViewW = normalize(cameraPosition - vRoadWorldPos);
@@ -932,7 +940,7 @@ export function createVolumetricSunShafts(
  * and subtle FBM plaster/wood grime mottling so buildings look authentically aged.
  */
 export function enhanceBuildingWallMaterial(mat: THREE.MeshStandardMaterial): void {
-  mat.customProgramCacheKey = () => 'v4_building_wall';
+  mat.customProgramCacheKey = () => 'v6_building_wall';
   mat.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader
       .replace(
@@ -975,7 +983,13 @@ float horizWeath = 0.88 + 0.14 * wMacro * (0.75 + 0.25 * wFine);
 float rainGrime = 1.0 - smoothstep(0.55, 0.92, wStreak) * 0.15;
 
 diffuseColor.rgb *= wallShade * horizWeath * rainGrime;
-diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.18, 0.21, 0.13), dampMoss * 0.42);`
+diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.68, 0.84, 0.60), dampMoss * 0.58);`
+      )
+      .replace(
+        '#include <roughnessmap_fragment>',
+        `#include <roughnessmap_fragment>
+// Damp splashback has a different response to light from the dry upper plaster.
+roughnessFactor = clamp(roughnessFactor + (wFine - 0.5) * 0.08 - dampMoss * 0.12, 0.42, 1.0);`
       );
   };
 }
@@ -986,7 +1000,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.18, 0.21, 0.13), dampMoss * 0.42
  * near lower roof eaves, and subtle weathering roughness breaks.
  */
 export function enhanceBuildingRoofMaterial(mat: THREE.MeshStandardMaterial): void {
-  mat.customProgramCacheKey = () => 'v4_building_roof';
+  mat.customProgramCacheKey = () => 'v6_building_roof';
   mat.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader
       .replace(
@@ -1021,7 +1035,13 @@ float rPatina = brNoise(vRoofWorldPos.xz * 0.48) * 0.65 + brNoise(vRoofWorldPos.
 float rLichen = smoothstep(0.58, 0.88, brNoise(vRoofWorldPos.xz * 2.2 + 5.3));
 float eaveMoss = (1.0 - smoothstep(0.0, 1.4, vRoofLocalY)) * smoothstep(0.42, 0.78, brNoise(vRoofWorldPos.xz * 1.4));
 diffuseColor.rgb *= (0.78 + 0.28 * rPatina);
-diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.19, 0.22, 0.14), clamp(eaveMoss * 0.55 + rLichen * 0.28, 0.0, 0.65));`
+float biologicalPatina = clamp(eaveMoss * 0.55 + rLichen * 0.28, 0.0, 0.65);
+diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.70, 0.87, 0.58), biologicalPatina);`
+      )
+      .replace(
+        '#include <roughnessmap_fragment>',
+        `#include <roughnessmap_fragment>
+roughnessFactor = clamp(roughnessFactor + biologicalPatina * 0.20 + (rPatina - 0.5) * 0.08, 0.26, 1.0);`
       );
   };
 }
@@ -1876,18 +1896,19 @@ export function buildV2MeadowAndProps(
 }
 
 /**
- * Clean photographic filmic color-grading & optical vignette ShaderPass
- * (zero film grain or unsharp halo artifacts so fine foliage & stonework stay crystal-clear).
+ * Scene-linear photographic grade, placed before Three's OutputPass.
+ * Contrast preserves HDR headroom so the output tone mapper owns the highlight rolloff.
  */
 export function createCinematicColorGradeShader() {
   return {
     uniforms: {
       tDiffuse: { value: null },
-      uVignette: { value: 0.26 },
-      uWarmth: { value: 0.03 },
+      uVignette: { value: 0.24 },
+      uWarmth: { value: 0.025 },
       uContrast: { value: 0.18 },
       uSaturation: { value: 0.86 },
       uGrain: { value: 0.0 },
+      uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2(1440, 900) },
     },
     vertexShader: `
@@ -1904,28 +1925,48 @@ export function createCinematicColorGradeShader() {
       uniform float uContrast;
       uniform float uSaturation;
       uniform float uGrain;
+      uniform float uTime;
       uniform vec2 uResolution;
       varying vec2 vUv;
 
+      float filmNoise(vec2 p) {
+        return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
+      }
+
       void main() {
         vec4 center = texture2D(tDiffuse, vUv);
-        vec3 col = center.rgb;
+        vec3 col = max(center.rgb, vec3(0.0));
+        const vec3 lumaWeights = vec3(0.2126, 0.7152, 0.0722);
+        float luma = max(dot(col, lumaWeights), 0.0001);
 
-        float luma = dot(col, vec3(0.2126, 0.7152, 0.0722));
-        col = mix(vec3(luma), col, uSaturation);
+        // Apply contrast around photographic middle grey. Fade it out above one
+        // so HDR sun glints stay energy bounded rather than being squared.
+        float lowContrast = 0.18 * pow(luma / 0.18, 1.0 + uContrast * 0.45);
+        float gradedLuma = mix(lowContrast, luma, smoothstep(0.55, 1.8, luma));
+        col *= gradedLuma / luma;
 
-        vec3 shadowTint = vec3(0.93, 0.96, 1.03);
-        vec3 highlightTint = vec3(1.0 + uWarmth, 1.0 + uWarmth * 0.42, 1.0 - uWarmth * 0.45);
-        col *= mix(shadowTint, highlightTint, smoothstep(0.06, 0.72, luma));
+        // A subtle cool skylight bias in shade and neutral warm sunlit surfaces.
+        float shadowWeight = 1.0 - smoothstep(0.025, 0.30, gradedLuma);
+        float highlightWeight = smoothstep(0.18, 1.2, gradedLuma);
+        vec3 shadowTint = vec3(0.965, 0.989, 1.025);
+        vec3 highlightTint = vec3(1.0 + uWarmth, 1.0 + uWarmth * 0.30, 1.0 - uWarmth * 0.48);
+        col *= mix(vec3(1.0), shadowTint, shadowWeight * 0.65);
+        col *= mix(vec3(1.0), highlightTint, highlightWeight);
 
-        vec3 sCurve = col * col * (3.0 - 2.0 * clamp(col, 0.0, 1.0));
-        col = mix(col, sCurve, uContrast);
+        // Keep shadow color separation; gently restrain bright foliage and sky.
+        float colorLuma = dot(col, lumaWeights);
+        float saturation = uSaturation * mix(1.02, 0.95, smoothstep(0.6, 2.0, colorLuma));
+        col = mix(vec3(colorLuma), col, saturation);
 
-        vec2 dist = vUv - 0.5;
-        float r2 = dot(dist, dist) * 2.0;
-        float vig = 1.0 - smoothstep(0.28, 1.38, r2) * uVignette;
-        col *= vig;
-        gl_FragColor = vec4(col, center.a);
+        // Broad photographic falloff, without a hard dark ring around the weapon.
+        vec2 opticalUv = vUv * (1.0 - vUv.yx);
+        float opticalWeight = pow(clamp(16.0 * opticalUv.x * opticalUv.y, 0.0, 1.0), 0.22);
+        col *= mix(1.0, opticalWeight, clamp(uVignette, 0.0, 0.75));
+
+        // Grain is opt-in, luminance scaled and subpixel stable at any resolution.
+        float noise = filmNoise(floor(vUv * uResolution) + floor(uTime * 24.0) * vec2(17.0, 29.0)) - 0.5;
+        col += noise * uGrain * min(sqrt(max(colorLuma, 0.0)), 0.65) * 0.08;
+        gl_FragColor = vec4(max(col, vec3(0.0)), center.a);
       }
     `,
   };

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { ArrowUpRight } from 'lucide-react';
 import {
   computeCompassBearingDeg,
   computeCompassTicks,
@@ -55,8 +56,54 @@ export const GameHud: React.FC<GameHudProps> = ({
   onRestart,
 }) => {
   const minimapRef = useRef<HTMLCanvasElement | null>(null);
+  const mapTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const tacticalPanelRef = useRef<HTMLDivElement | null>(null);
+  const closeDrawerRef = useRef(onCloseDrawer);
+  closeDrawerRef.current = onCloseDrawer;
 
-  // Draw Renda roads, rivers, landmarks & player onto 132x132 minimap inside Tactical Drawer
+  useEffect(() => {
+    if (!drawerOpen || hud.mode === 'studio') return;
+    const panel = tacticalPanelRef.current;
+    if (!panel) return;
+    const focusable = () => Array.from(panel.querySelectorAll<HTMLElement>(
+      'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
+    ));
+    const trigger = mapTriggerRef.current;
+    (focusable()[0] ?? panel).focus({ preventScroll: true });
+    const handleDialogKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        closeDrawerRef.current();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      // Native Tab navigation stays inside the dialog, without reaching gameplay shortcuts.
+      event.stopPropagation();
+      const controls = focusable();
+      const first = controls[0] ?? panel;
+      const last = controls[controls.length - 1] ?? panel;
+      if (!panel.contains(document.activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    // Capture Escape before the engine's window listener can pause the game.
+    document.addEventListener('keydown', handleDialogKey, true);
+    return () => {
+      document.removeEventListener('keydown', handleDialogKey, true);
+      if (trigger?.isConnected) trigger.focus({ preventScroll: true });
+    };
+    // HUD snapshots and parent callbacks update frequently; preserve the current control's focus.
+  }, [drawerOpen, hud.mode]);
+
+  // Draw roads, rivers, landmarks and the player inside the tactical map.
   useEffect(() => {
     if (!drawerOpen) return;
     const canvas = minimapRef.current;
@@ -67,16 +114,22 @@ export const GameHud: React.FC<GameHudProps> = ({
     const w = canvas.width;
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#141b17';
+    ctx.fillStyle = '#171c19';
     ctx.fillRect(0, 0, w, h);
 
-    const scale = 0.058;
+    ctx.strokeStyle = 'rgba(216, 224, 207, 0.06)';
+    ctx.lineWidth = 1;
+    for (let n = 0; n <= w; n += 33) {
+      ctx.beginPath(); ctx.moveTo(n, 0); ctx.lineTo(n, h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, n); ctx.lineTo(w, n); ctx.stroke();
+    }
+    const scale = 0.095;
     const toPx = (wx: number, wz: number): [number, number] => [
       w * 0.5 + (wx - hud.playerX) * scale,
       h * 0.5 + (wz - hud.playerZ) * scale,
     ];
 
-    ctx.strokeStyle = '#4f9199';
+    ctx.strokeStyle = '#5b7e82';
     ctx.lineWidth = 3;
     for (const ww of WORLD.waterways) {
       if (ww.pts.length < 2) continue;
@@ -106,7 +159,7 @@ export const GameHud: React.FC<GameHudProps> = ({
     for (const lm of WORLD.landmarks) {
       const [px, py] = toPx(lm.x, lm.z);
       if (px < -6 || px > w + 6 || py < -6 || py > h + 6) continue;
-      ctx.fillStyle = discovered.has(lm.id) ? '#7ec482' : '#d1c7b2';
+      ctx.fillStyle = discovered.has(lm.id) ? '#b4c592' : '#d1c7b2';
       ctx.beginPath();
       ctx.arc(px, py, 2.5, 0, Math.PI * 2);
       ctx.fill();
@@ -116,7 +169,7 @@ export const GameHud: React.FC<GameHudProps> = ({
       const [mx, my] = toPx(hud.activeMission.targetX, hud.activeMission.targetZ);
       const clampedX = Math.max(7, Math.min(w - 7, mx));
       const clampedY = Math.max(7, Math.min(h - 7, my));
-      ctx.fillStyle = '#e6a145';
+      ctx.fillStyle = '#c8d0ad';
       ctx.beginPath();
       ctx.arc(clampedX, clampedY, 4.2, 0, Math.PI * 2);
       ctx.fill();
@@ -140,7 +193,7 @@ export const GameHud: React.FC<GameHudProps> = ({
   }, [drawerOpen, hud.playerX, hud.playerZ, hud.playerHeading, hud.discoveredIds, hud.activeMission]);
 
   const modes: { id: PlayMode; label: string; keyHint: string }[] = [
-    { id: 'walk', label: 'Patrol (FPS)', keyHint: '1' },
+    { id: 'walk', label: 'Patrol', keyHint: '1' },
     { id: 'drive', label: 'Drive', keyHint: '2' },
     { id: 'canoe', label: 'Canoe', keyHint: '3' },
     { id: 'studio', label: 'Studio', keyHint: '4' },
@@ -167,425 +220,79 @@ export const GameHud: React.FC<GameHudProps> = ({
   const staminaPct = Math.round(Math.max(0, Math.min(1, hud.stamina ?? 1)) * 100);
 
   return (
-    <div className="fixed inset-0 z-10 pointer-events-none flex flex-col justify-between p-3 sm:p-5 pt-safe pb-safe">
-      {/* Top Row: Ultra-Minimal Borderless AAA Compass & Whisper Corner Triggers */}
-      <div className="relative flex items-start justify-between gap-2">
-        {/* Top-Left Whisper Tactical Menu Trigger */}
-        <div className="pointer-events-auto flex flex-col items-start gap-0.5 rounded-lg bg-black/38 backdrop-blur-[2px] border border-white/10 px-2.5 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.35)]">
-          <button
-            type="button"
-            tabIndex={-1}
-            aria-expanded={drawerOpen}
-            aria-label="Open tactical map and modes drawer"
-            onClick={(e) => {
-              e.currentTarget.blur();
-              onToggleDrawer();
-            }}
-            className="min-h-[28px] text-left text-xs sm:text-[13px] font-medium text-[#f4efe4] hover:text-white cursor-pointer transition-opacity hud-text-shadow flex items-center gap-2"
-          >
-            <span className="inline-block px-1.5 py-0.5 rounded bg-white/15 text-[10px] font-mono-num tracking-wider">
-              TAB
-            </span>
-            <span>
-              Renda · <strong className="font-mono-num text-[#f0b35e]">{hud.discoveredIds.length}/{hud.totalLandmarks}</strong>
-              <span className="hidden sm:inline text-[#d6cfc0]"> · {hud.score} pts</span>
-            </span>
-          </button>
+    <div className="r-hud">
+      <header className="r-hud-header">
+        <button ref={mapTriggerRef} type="button" className="r-map-trigger" aria-haspopup="dialog" aria-expanded={drawerOpen} aria-controls="r-tactical-panel" onClick={(e) => { e.currentTarget.blur(); onToggleDrawer(); }}>
+          <kbd>TAB</kbd><span>TACTICAL MAP</span><span className="r-map-count">{hud.discoveredIds.length}/{hud.totalLandmarks}</span>
+        </button>
 
-          {hud.mode !== 'studio' && hud.activeMission && (
-            <div className="text-[11px] text-[#ebe4d6] hud-text-shadow font-mono-num truncate max-w-[44vw]">
-              → {hud.activeMission.targetName} ({missionDist}m)
-            </div>
-          )}
-        </div>
-
-        {/* Top-Center Borderless AAA Compass (Ref 1 / Ref 2 / Ref 3 Style) */}
         {hud.mode !== 'studio' && (
-          <div
-            aria-label="Compass navigation bar"
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-[220px] sm:w-[336px] h-10 pointer-events-none select-none overflow-hidden rounded-b-xl bg-gradient-to-b from-black/50 via-black/28 to-transparent"
-          >
-            {/* Subtle top hairline & center white downward triangle caret */}
-            <div
-              className="absolute top-[18px] left-6 right-6 h-px"
-              style={{
-                background:
-                  'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.42) 50%, rgba(255,255,255,0) 100%)',
-              }}
-            />
-            <div
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0"
-              style={{
-                borderLeft: '4.5px solid transparent',
-                borderRight: '4.5px solid transparent',
-                borderTop: '5.5px solid #ffffff',
-                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.85))',
-              }}
-            />
-
-            {compassTicks.map((tick) => {
-              const pct = 50 + (tick.offsetDeg / 72) * 46;
-              return (
-                <div
-                  key={tick.deg}
-                  className="absolute -translate-x-1/2 flex flex-col items-center hud-text-shadow"
-                  style={{ left: `${pct}%`, top: '6px' }}
-                >
-                  <span
-                    className={`font-mono-num leading-none ${
-                      tick.label === 'N'
-                        ? 'text-[12px] font-bold text-[#f6efe2]'
-                        : tick.isCardinal
-                          ? 'text-[11px] font-semibold text-[#f2ede2]'
-                          : 'text-[10px] font-medium text-[#d5d0c4]/85'
-                    }`}
-                  >
-                    {tick.label}
-                  </span>
-                  <span className="mt-1 w-px h-1.5 bg-white/50" />
-                </div>
-              );
-            })}
-
-            {missionDelta !== null && (
-              <div
-                className="absolute bottom-0 -translate-x-1/2 text-[9px] font-bold font-mono-num text-[#f5b85c] hud-text-shadow whitespace-nowrap"
-                style={{
-                  left: `${50 + (Math.max(-64, Math.min(64, missionDelta)) / 72) * 44}%`,
-                }}
-              >
-                ◆ {missionDist}m
+          <div className="r-compass" aria-label={`Compass heading ${Math.round(camDeg)} degrees`}>
+            <span className="r-compass-caret" />
+            <div className="r-compass-rail" />
+            {compassTicks.map((tick) => (
+              <div key={tick.deg} className={`r-compass-tick ${tick.isCardinal ? 'r-cardinal' : ''}`} style={{ left: `${50 + (tick.offsetDeg / 72) * 46}%` }}>
+                <span>{tick.label}</span><i />
               </div>
-            )}
+            ))}
+            <span className="r-compass-bearing">{String(Math.round(camDeg) % 360).padStart(3, '0')}°</span>
+            {missionDelta !== null && <span className="r-compass-mission" style={{ left: `${50 + (Math.max(-64, Math.min(64, missionDelta)) / 72) * 44}%` }}>◆ {missionDist}m</span>}
           </div>
         )}
 
-        {/* Top-Right Minimal Whisper Mute & Pause Buttons */}
-        <div className="pointer-events-auto flex items-center gap-1.5">
-          {hud.selectedBuilding && hud.mode !== 'studio' && (
-            <button
-              type="button"
-              tabIndex={-1}
-              onClick={(e) => {
-                e.currentTarget.blur();
-                onSelectMode('studio');
-              }}
-              className="hidden sm:inline-flex items-center min-h-[38px] px-3 py-1 rounded-lg text-xs font-semibold text-[#141a16] bg-[#e6a145] hover:bg-[#f0b35e] cursor-pointer shadow-md"
-            >
-              Restyle {hud.selectedBuilding.name}
-            </button>
-          )}
-          <button
-            type="button"
-            tabIndex={-1}
-            aria-label={muted ? 'Unmute audio' : 'Mute audio'}
-            title="Mute [M]"
-            onClick={(e) => {
-              e.currentTarget.blur();
-              onToggleMute();
-            }}
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-[#f4efe4] hover:text-white hover:bg-black/35 cursor-pointer transition-colors hud-text-shadow"
-          >
-            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M11 5L6 9H2v6h4l5 4V5z" />
-              {muted ? (
-                <path d="M22 9l-6 6M16 9l6 6" />
-              ) : (
-                <path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14" />
-              )}
-            </svg>
+        <div className="r-hud-tools">
+          {hud.selectedBuilding && hud.mode !== 'studio' && <button type="button" className="r-restyle-button" onClick={(e) => { e.currentTarget.blur(); onSelectMode('studio'); }}>RESTYLE BUILDING</button>}
+          <button type="button" className="r-icon-button" aria-label={muted ? 'Unmute audio' : 'Mute audio'} title="Audio [M]" onClick={(e) => { e.currentTarget.blur(); onToggleMute(); }}>
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z" />{muted ? <path d="m22 9-6 6m0-6 6 6" /> : <path d="M15.5 8.5a5 5 0 0 1 0 7m3.5-10a9 9 0 0 1 0 13" />}</svg>
           </button>
-
-          <button
-            type="button"
-            tabIndex={-1}
-            aria-label="Pause game"
-            title="Pause [Esc]"
-            onClick={(e) => {
-              e.currentTarget.blur();
-              onPause();
-            }}
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-[#f4efe4] hover:text-white hover:bg-black/35 cursor-pointer transition-colors hud-text-shadow"
-          >
-            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-              <rect x="6" y="4" width="4" height="16" rx="1" />
-              <rect x="14" y="4" width="4" height="16" rx="1" />
-            </svg>
+          <button type="button" className="r-icon-button" aria-label="Pause game" title="Pause [Esc]" onClick={(e) => { e.currentTarget.blur(); onPause(); }}>
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Center Dynamic Hipfire Crosshair (fades out cleanly into EOTech reticle in ADS) */}
       {showCrosshair && (
-        <div
-          aria-hidden="true"
-          className="fixed inset-0 pointer-events-none flex items-center justify-center"
-          style={{ opacity: crosshairOpacity }}
-        >
-          <div className="relative w-12 h-12 flex items-center justify-center">
-            <span className="w-1 h-1 rounded-full bg-white/85 shadow-[0_0_2px_rgba(0,0,0,0.85)]" />
-            <span
-              className="absolute w-2 h-[1.5px] bg-white/80 shadow-[0_0_2px_rgba(0,0,0,0.85)]"
-              style={{ right: `calc(50% + ${crosshairSpreadPx}px)` }}
-            />
-            <span
-              className="absolute w-2 h-[1.5px] bg-white/80 shadow-[0_0_2px_rgba(0,0,0,0.85)]"
-              style={{ left: `calc(50% + ${crosshairSpreadPx}px)` }}
-            />
-            <span
-              className="absolute h-2 w-[1.5px] bg-white/80 shadow-[0_0_2px_rgba(0,0,0,0.85)]"
-              style={{ bottom: `calc(50% + ${crosshairSpreadPx}px)` }}
-            />
-            <span
-              className="absolute h-2 w-[1.5px] bg-white/80 shadow-[0_0_2px_rgba(0,0,0,0.85)]"
-              style={{ top: `calc(50% + ${crosshairSpreadPx}px)` }}
-            />
-            {hud.isReloading && (
-              <span className="absolute top-11 text-[10px] tracking-[0.2em] uppercase text-[#f0b35e] font-semibold hud-text-shadow whitespace-nowrap">
-                Reloading
-              </span>
-            )}
-          </div>
+        <div aria-hidden="true" className="r-crosshair" style={{ opacity: crosshairOpacity }}>
+          <span className="r-crosshair-dot" />
+          <span className="r-crosshair-horizontal" style={{ right: `calc(50% + ${crosshairSpreadPx}px)` }} />
+          <span className="r-crosshair-horizontal" style={{ left: `calc(50% + ${crosshairSpreadPx}px)` }} />
+          <span className="r-crosshair-vertical" style={{ bottom: `calc(50% + ${crosshairSpreadPx}px)` }} />
+          <span className="r-crosshair-vertical" style={{ top: `calc(50% + ${crosshairSpreadPx}px)` }} />
         </div>
       )}
 
-      {/* Non-blocking Discovery / Delivery Banner */}
       {hud.activeBanner && (
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-20 pointer-events-none w-[92vw] sm:w-auto max-w-md">
-          <div
-            className="px-4 py-2 rounded-lg text-center"
-            style={{
-              backgroundColor: 'rgba(14, 19, 16, 0.86)',
-              border: '1px solid rgba(230, 161, 69, 0.4)',
-              boxShadow: '0 10px 28px rgba(0, 0, 0, 0.45)',
-            }}
-          >
-            <div className="text-xs sm:text-sm font-semibold text-[#f0b35e]">{hud.activeBanner.title}</div>
-            <div className="text-[11px] sm:text-xs text-[#ddd5c5] mt-0.5 line-clamp-2">
-              {hud.activeBanner.subtitle}
-            </div>
-          </div>
-        </div>
+        <div className="r-event-banner" role="status"><span className="r-eyebrow">FIELD UPDATE</span><strong>{hud.activeBanner.title}</strong><p>{hud.activeBanner.subtitle}</p></div>
       )}
 
-      {/* Collapsible [Tab] Tactical Drawer (Modes, Perspective, Atmosphere, Landmarks, Minimap) */}
       {drawerOpen && hud.mode !== 'studio' && (
-        <div
-          role="dialog"
-          aria-label="Renda tactical navigation and modes"
-          className="pointer-events-auto fixed top-14 left-3 sm:left-5 z-30 w-[94vw] max-w-xl max-h-[78dvh] overflow-y-auto rounded-xl p-4"
-          style={{
-            backgroundColor: 'rgba(15, 21, 18, 0.94)',
-            border: '1px solid rgba(244, 232, 206, 0.18)',
-            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.65)',
-          }}
-        >
-          <div className="flex items-center justify-between gap-2 pb-3 border-b border-white/10">
-            <div>
-              <h2 className="font-display text-base font-bold text-[#f6efe2]">Renda Valley Tactical Map</h2>
-              <p className="text-[11px] text-[#a7b2a8] font-mono-num">
-                {hud.nearestLandmark
-                  ? `Near ${hud.nearestLandmark.name} (${hud.nearestLandmark.distanceM}m) · `
-                  : ''}
-                {hud.elevationM}m ASL · {hud.deliveriesCompleted} deliveries
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onCloseDrawer}
-              className="px-2.5 py-1 rounded-md text-xs text-[#ddd5c5] hover:text-white bg-white/10 hover:bg-white/15 cursor-pointer"
-            >
-              Close [Tab]
-            </button>
+        <div ref={tacticalPanelRef} id="r-tactical-panel" role="dialog" aria-modal="true" aria-labelledby="r-tactical-title" tabIndex={-1} className="r-tactical-panel">
+          <header className="r-panel-header"><div><span className="r-eyebrow">ABAVA VALLEY / KURZEME</span><h2 id="r-tactical-title">TACTICAL MAP</h2></div><button type="button" className="r-icon-button" aria-label="Close tactical map" onClick={onCloseDrawer}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button></header>
+          <div className="r-map-overview">
+            <div className="r-map-frame"><canvas ref={minimapRef} width={264} height={264} aria-label="Renda village minimap" /><span className="r-map-north">N ↑</span><div className="r-map-legend"><span>— ROAD</span><span>— RIVER</span><span>● LANDMARK</span></div></div>
+            <div className="r-map-position"><span className="r-eyebrow">CURRENT POSITION</span><strong>{hud.nearestLandmark?.name ?? 'Abava Valley'}</strong><p>{hud.nearestLandmark ? `${hud.nearestLandmark.distanceM} m from landmark` : 'Exploring the valley'}</p><div><span>ELEVATION</span><b>{Math.round(hud.elevationM)} m ASL</b></div><div><span>DISCOVERED</span><b>{hud.discoveredIds.length} / {hud.totalLandmarks}</b></div><div><span>DELIVERIES</span><b>{hud.deliveriesCompleted}</b></div><button type="button" className="r-panel-secondary" onClick={() => onSetPerspective(hud.cameraPerspective === 'third_person' ? 'first_person' : 'third_person')}>{hud.cameraPerspective === 'third_person' ? 'THIRD PERSON' : 'FIRST PERSON'}<kbd>V</kbd></button></div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-[144px_1fr] gap-3.5 py-3 border-b border-white/10">
-            <div className="flex flex-col items-center gap-2">
-              <canvas
-                ref={minimapRef}
-                width={132}
-                height={132}
-                className="rounded-lg border border-white/15 block"
-                aria-label="Renda village minimap"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  onSetPerspective(hud.cameraPerspective === 'third_person' ? 'first_person' : 'third_person');
-                }}
-                className="w-full px-2.5 py-1.5 rounded-md text-[11px] font-medium bg-white/10 hover:bg-white/15 text-[#f6efe2] cursor-pointer"
-              >
-                View: {hud.cameraPerspective === 'third_person' ? '3rd Person' : '1st Person'} [V]
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              {/* Modes 1-4 */}
-              <div>
-                <div className="text-[10px] uppercase tracking-wider text-[#a7b2a8] mb-1.5">Play Mode</div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                  {modes.map((m) => {
-                    const active = hud.mode === m.id;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => {
-                          onSelectMode(m.id);
-                          onCloseDrawer();
-                        }}
-                        className={`min-h-[38px] px-2 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-                          active
-                            ? 'bg-[#e6a145] text-[#141a16]'
-                            : 'bg-white/5 text-[#ddd5c5] hover:bg-white/15'
-                        }`}
-                      >
-                        {m.label} [{m.keyHint}]
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Atmosphere / Weather Presets */}
-              <div>
-                <div className="text-[10px] uppercase tracking-wider text-[#a7b2a8] mb-1.5">
-                  Kurzeme Atmosphere [T]
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {ATMOSPHERE_OPTIONS.map((opt) => {
-                    const active = atmosphere === opt.id;
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => onSetAtmosphere(opt.id)}
-                        className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium cursor-pointer transition-colors ${
-                          active
-                            ? 'bg-[#e6a145] text-[#141a16] font-semibold'
-                            : 'bg-white/5 text-[#ddd5c5] hover:bg-white/15'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Fast-Travel Landmarks */}
-          <div className="pt-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-[10px] uppercase tracking-wider text-[#a7b2a8]">
-                Fast-Travel Landmarks ({hud.discoveredIds.length}/{hud.totalLandmarks})
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  onRestart();
-                  onCloseDrawer();
-                }}
-                className="text-[11px] text-[#d5cdc0] hover:text-white underline cursor-pointer"
-              >
-                Reset Position
-              </button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  onTeleportLandmark('abava_bridge');
-                  onCloseDrawer();
-                }}
-                className="min-h-[42px] text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer bg-white/5 hover:bg-white/15"
-              >
-                <div className="font-medium text-[#f0b35e] truncate">P120 Abava Bridge</div>
-                <div className="text-[10px] text-[#a7b2a8] truncate">Granite Pier River View</div>
-              </button>
-
-              {WORLD.landmarks.map((lm) => {
-                const found = hud.discoveredIds.includes(lm.id);
-                return (
-                  <button
-                    key={lm.id}
-                    type="button"
-                    onClick={() => {
-                      onTeleportLandmark(lm.id);
-                      onCloseDrawer();
-                    }}
-                    className="min-h-[42px] text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer bg-white/5 hover:bg-white/15"
-                  >
-                    <div className="font-medium text-[#f6efe2] truncate">{lm.name}</div>
-                    <div className="text-[10px] text-[#a7b2a8] truncate">
-                      {lm.year} · {found ? 'Visited' : 'Unvisited'}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <section className="r-panel-section" aria-label="Play mode"><div className="r-section-label">TRAVERSAL &amp; CREATION</div><div className="r-mode-grid">{modes.map((mode) => <button key={mode.id} type="button" aria-pressed={hud.mode === mode.id} className={`r-choice-button ${hud.mode === mode.id ? 'r-choice-active' : ''}`} onClick={() => { onSelectMode(mode.id); onCloseDrawer(); }}><kbd>{mode.keyHint}</kbd><span>{mode.label}</span></button>)}</div></section>
+          <section className="r-panel-section" aria-label="Atmosphere"><div className="r-section-label">ATMOSPHERE <kbd>T</kbd></div><div className="r-weather-options">{ATMOSPHERE_OPTIONS.map((option) => <button key={option.id} type="button" aria-pressed={atmosphere === option.id} onClick={() => onSetAtmosphere(option.id)} className={atmosphere === option.id ? 'r-weather-active' : ''}>{option.label}</button>)}</div></section>
+          <section className="r-panel-section"><div className="r-section-label">LANDMARKS <button type="button" onClick={() => { onRestart(); onCloseDrawer(); }}>RESET POSITION <ArrowUpRight size={10} strokeWidth={1.5} aria-hidden="true" /></button></div><div className="r-landmark-grid"><button type="button" className="r-landmark-button" onClick={() => { onTeleportLandmark('abava_bridge'); onCloseDrawer(); }}><span>P120 Abava Bridge</span><small>RIVER CROSSING</small><i aria-hidden="true"><ArrowUpRight size={12} strokeWidth={1.5} /></i></button>{WORLD.landmarks.map((landmark) => <button key={landmark.id} type="button" className="r-landmark-button" onClick={() => { onTeleportLandmark(landmark.id); onCloseDrawer(); }}><span>{landmark.name}</span><small>{hud.discoveredIds.includes(landmark.id) ? 'VISITED' : 'UNEXPLORED'} · {landmark.year}</small><i aria-hidden="true"><ArrowUpRight size={12} strokeWidth={1.5} /></i></button>)}</div></section>
+          <footer className="r-panel-footer"><kbd>ESC</kbd> CLOSE MAP<span>SELECT A LANDMARK TO FAST TRAVEL</span></footer>
         </div>
       )}
 
-      {/* Bottom Row: Ultra-Minimal Weapon Silhouette & Ammo Counter (Ref 1 / Ref 2 / Ref 3) */}
       {hud.mode !== 'studio' && (
-        <div className="flex items-end justify-between gap-4">
-          {/* Bottom-Left subtle whisper controls hint on desktop */}
-          <div className="hidden md:flex items-center gap-3 text-[11px] text-[#efe9dc]/90 hud-text-shadow select-none px-2.5 py-1 rounded bg-black/32 backdrop-blur-[1px]">
-            <span>
-              {hud.mode === 'walk'
-                ? 'Click Canvas Lock Aim · Left-Click Fire · Right-Click/F ADS · R Reload · V 1st/3rd · Tab Map'
-                : 'WASD Steer · Space Brake · 1-4 Modes · Tab Map'}
-            </span>
+        <div className="r-hud-bottom">
+          <div className="r-field-position">
+            <div className="r-field-label"><i />{hud.mode === 'walk' ? 'ON FOOT' : hud.mode === 'drive' ? 'VEHICLE' : 'ON THE RIVER'}<span>ABAVA VALLEY</span></div>
+            {hud.activeMission ? <><strong>{hud.activeMission.targetName}</strong><p><span className="r-objective-diamond">◆</span> {missionDist} m TO DESTINATION</p></> : <><strong>{hud.nearestLandmark?.name ?? 'Renda, Kurzeme'}</strong><p>{Math.round(hud.elevationM)} m ASL{hud.nearestLandmark && <> <span className="r-footer-separator">/</span> {hud.nearestLandmark.distanceM} m AWAY</>}</p></>}
+            {hud.mode === 'walk' && staminaPct < 98 && <div className="r-stamina" role="meter" aria-label="Stamina" aria-valuenow={staminaPct} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${staminaPct}%` }} /></div>}
           </div>
-
-          {/* Bottom-Right Minimal Weapon Silhouette + 30 | 180 Telemetry */}
-          <div className="ml-auto flex flex-col items-end gap-1 select-none hud-text-shadow">
-            {hud.mode === 'walk' ? (
-              <>
-                <div className="flex items-center gap-2.5 text-[#f6efe2]">
-                  {/* Crisp carbine silhouette + 3-bullet icon matching Ref 1/2 */}
-                  <svg
-                    viewBox="0 0 88 22"
-                    className="w-16 h-4 text-[#f6efe2]/90 hidden sm:block"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M4 9h14v3H4V9zm14-1.5h18l2-2h14v2h10l3 1.5h15v2.5H65l-2 1.5H50l-1 4h-4l-1-4H34l-2 7h-5l1-7H18V7.5zm26-4h8v2h-8v-2z" />
-                  </svg>
-                  <svg viewBox="0 0 18 16" className="w-3.5 h-3.5 text-[#f6efe2]/90" fill="currentColor" aria-hidden="true">
-                    <path d="M2 5c0-2 .8-3.5 1.5-4C4.2 1.5 5 3 5 5v9H2V5zm5.5 0c0-2 .8-3.5 1.5-4 .7.5 1.5 2 1.5 4v9H7.5V5zm5.5 0c0-2 .8-3.5 1.5-4 .7.5 1.5 2 1.5 4v9H13V5z" />
-                  </svg>
-                  <div className="font-mono-num flex items-baseline gap-1.5">
-                    <span className="text-2xl sm:text-[26px] font-bold leading-none text-[#ffffff]">
-                      {hud.ammoInMag ?? 30}
-                    </span>
-                    <span className="text-sm text-white/50">|</span>
-                    <span className="text-sm sm:text-base font-medium text-[#e6dfd1]">
-                      {hud.ammoReserve ?? 180}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-[10px] font-mono-num uppercase tracking-wider text-[#d8d1c2]">
-                  <span>{hud.fireMode ?? 'SEMI'}</span>
-                  {hud.crouching && <span className="text-[#f0b35e]">CROUCH</span>}
-                  {staminaPct < 98 && (
-                    <span className="inline-flex items-center gap-1">
-                      <span className="w-10 h-1 bg-white/20 rounded-full overflow-hidden">
-                        <span className="block h-full bg-[#e6a145]" style={{ width: `${staminaPct}%` }} />
-                      </span>
-                    </span>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="flex items-baseline gap-1.5 font-mono-num text-[#ffffff]">
-                <span className="text-2xl font-bold leading-none">{hud.speedKmh}</span>
-                <span className="text-xs uppercase tracking-wider text-[#d8d1c2]">km/h</span>
-              </div>
-            )}
+          {hud.mode === 'walk' && !hud.pointerLocked && !drawerOpen && <div className="r-aim-prompt"><span>CLICK SCENE TO CONTROL</span><p>WASD MOVE <i /> RMB / F AIM <i /> R RELOAD</p></div>}
+          <div className="r-weapon-status">
+            {hud.mode === 'walk' ? <>
+              <div className="r-weapon-label">CARBINE <span>5.56</span></div>
+              <div className={`r-ammo ${(hud.ammoInMag ?? 30) <= 7 ? 'r-ammo-low' : ''}`} aria-label={`${hud.ammoInMag ?? 30} rounds loaded, ${hud.ammoReserve ?? 180} in reserve`}><strong>{String(hud.ammoInMag ?? 30).padStart(2, '0')}</strong><i /><span>{String(hud.ammoReserve ?? 180).padStart(3, '0')}</span></div>
+              <div className="r-weapon-state"><span><i /> {hud.fireMode ?? 'SEMI'}</span><span>{hud.isReloading ? 'RELOADING' : hud.crouching ? 'CROUCHED' : 'R · RELOAD'}</span></div>
+            </> : <><div className="r-weapon-label">GROUND SPEED</div><div className="r-ammo"><strong>{Math.round(hud.speedKmh)}</strong><span>KM/H</span></div></>}
           </div>
         </div>
       )}

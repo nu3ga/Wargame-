@@ -8,6 +8,8 @@ export type CameraPerspective = 'first_person' | 'third_person';
 
 export type FireMode = 'SEMI' | 'AUTO';
 
+export type RenderQuality = 'performance' | 'balanced' | 'cinematic';
+
 export type MaterialPattern =
   | 'clapboard'
   | 'brick'

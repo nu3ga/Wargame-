@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { DefaultLoadingManager } from 'three';
 import { GameHud } from './components/GameHud';
 import { PauseModal } from './components/PauseModal';
 import { StudioDock } from './components/StudioDock';
@@ -13,6 +14,7 @@ import type {
   MaterialRecipe,
   PlayMode,
   WorldHudSnapshot,
+  RenderQuality,
 } from './world/types';
 
 const INITIAL_HUD: WorldHudSnapshot = {
@@ -61,13 +63,30 @@ export default function App() {
   const [atmosphere, setAtmosphere] = useState<AtmospherePreset>('golden');
   const [tacticalDrawerOpen, setTacticalDrawerOpen] = useState(false);
   const [webglError, setWebglError] = useState<string | null>(null);
+  const [quality, setQuality] = useState<RenderQuality>('balanced');
+  const [loading, setLoading] = useState(true);
+  const [loadProgress, setLoadProgress] = useState(0);
 
   useEffect(() => {
     const container = mountRef.current;
     if (!container) return;
 
     let engine: RendaSceneEngine | null = null;
-    try {
+    let initialAssetsLoaded = false;
+    const previousProgress = DefaultLoadingManager.onProgress;
+    const previousLoad = DefaultLoadingManager.onLoad;
+    DefaultLoadingManager.onProgress = (url, loaded, total) => {
+      previousProgress?.(url, loaded, total);
+      if (!initialAssetsLoaded) setLoadProgress(Math.round(loaded / Math.max(total, 1) * 100));
+    };
+    DefaultLoadingManager.onLoad = () => {
+      previousLoad?.();
+      initialAssetsLoaded = true;
+      engine?.finishLoading();
+      setLoading(false);
+    };
+    // Paint the loading screen before the synchronous terrain/geometry preparation.
+    const initialization = window.setTimeout(() => { try {
       engine = new RendaSceneEngine(container, (snapshot) => {
         setHud(snapshot);
         if (snapshot.atmosphere) {
@@ -75,6 +94,7 @@ export default function App() {
         }
       });
       engineRef.current = engine;
+      setQuality(engine.getRenderQuality());
 
       const params = new URLSearchParams(window.location.search);
       if (params.get('autostart') === '1') {
@@ -84,9 +104,14 @@ export default function App() {
       }
     } catch (err) {
       setWebglError(err instanceof Error ? err.message : 'Unable to initialize 3D viewport.');
+      setLoading(false);
     }
+    }, 50);
 
     return () => {
+      window.clearTimeout(initialization);
+      DefaultLoadingManager.onProgress = previousProgress;
+      DefaultLoadingManager.onLoad = previousLoad;
       engine?.dispose();
       engineRef.current = null;
     };
@@ -94,8 +119,9 @@ export default function App() {
 
   // Enter or Space starts from Title Screen
   useEffect(() => {
-    if (hud.phase !== 'title') return;
+    if (hud.phase !== 'title' || loading) return;
     const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.closest('button, input, select, textarea')) return;
       if (e.code === 'Enter' || e.code === 'Space') {
         e.preventDefault();
         engineRef.current?.startGame();
@@ -103,15 +129,16 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [hud.phase]);
+  }, [hud.phase, loading]);
 
-  // Tab toggles Tactical Drawer during active gameplay (never trapped in pointer lock)
+  // Tab opens navigation from the scene; the open dialog owns keyboard focus.
   useEffect(() => {
     if (hud.phase !== 'playing') {
       setTacticalDrawerOpen(false);
       return;
     }
     const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || tacticalDrawerOpen || (e.target as HTMLElement)?.closest('button, input, select, textarea, [contenteditable="true"]')) return;
       if (e.code === 'Tab' && hud.mode !== 'studio') {
         e.preventDefault();
         setTacticalDrawerOpen((prev) => {
@@ -125,11 +152,16 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [hud.phase, hud.mode]);
+  }, [hud.phase, hud.mode, tacticalDrawerOpen]);
 
   const handleStart = () => {
     (document.activeElement as HTMLElement | null)?.blur();
     engineRef.current?.startGame();
+  };
+
+  const handleSetQuality = (next: RenderQuality) => {
+    engineRef.current?.setRenderQuality(next);
+    setQuality(next);
   };
 
   const handleSelectMode = (mode: PlayMode) => {
@@ -228,11 +260,22 @@ export default function App() {
         </div>
       )}
 
-      {hud.phase === 'title' && (
-        <TitleOverlay bestScore={hud.bestScore} onStart={handleStart} />
+      {loading && !webglError && (
+        <div className="r-loading-screen" role="status" aria-live="polite">
+          <span className="r-eyebrow">RENDA / ABAVA VALLEY</span>
+          <strong>PREPARING THE VALLEY</strong>
+          <div className="r-loading-track" role="progressbar" aria-label="Loading world" aria-valuemin={0} aria-valuemax={100} aria-valuenow={loadProgress}>
+            <span style={{ width: `${Math.max(3, loadProgress)}%` }} />
+          </div>
+          <span className="r-loading-caption">{loadProgress}%</span>
+        </div>
       )}
 
-      {hud.phase === 'playing' && (
+      {hud.phase === 'title' && !loading && !webglError && (
+        <TitleOverlay bestScore={hud.bestScore} onStart={handleStart} quality={quality} onSetQuality={handleSetQuality} />
+      )}
+
+      {hud.phase === 'playing' && !loading && !webglError && (
         <>
           <GameHud
             hud={hud}
@@ -294,6 +337,8 @@ export default function App() {
           onResume={handleResume}
           onRestart={handleRestart}
           onReturnTitle={handleReturnTitle}
+          quality={quality}
+          onSetQuality={handleSetQuality}
         />
       )}
     </main>

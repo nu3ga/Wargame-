@@ -1,52 +1,143 @@
 {
   "asset": {
-    "generator": "Khronos glTF Blender I/O v5.1.18",
+    "generator": "glTF-Transform v4.5.1",
     "version": "2.0"
   },
-  "extensionsUsed": [
-    "KHR_materials_emissive_strength"
-  ],
-  "scene": 0,
-  "scenes": [
+  "accessors": [
     {
-      "name": "Scene",
-      "nodes": [
-        0
-      ]
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 18000,
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 6687,
+      "max": [
+        0.5897359848022461,
+        1.84686279296875,
+        0.4760739803314209
+      ],
+      "min": [
+        -0.4760739803314209,
+        -0.8093715310096741,
+        -0.4760739803314209
+      ],
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 6687,
+      "bufferView": 1,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 6687,
+      "bufferView": 1,
+      "byteOffset": 24
     }
   ],
-  "nodes": [
+  "bufferViews": [
     {
-      "mesh": 0,
-      "name": "ocean_buoy"
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 36000,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 36000,
+      "byteLength": 213984,
+      "byteStride": 32,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "source": 2,
+      "sampler": 0
+    },
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 3,
+      "sampler": 0
+    }
+  ],
+  "images": [
+    {
+      "name": "ocean_buoy_emission",
+      "mimeType": "image/jpeg",
+      "uri": "textures/ocean_buoy_emission_1k.jpg"
+    },
+    {
+      "name": "ocean_buoy_nor_gl",
+      "mimeType": "image/jpeg",
+      "uri": "textures/ocean_buoy_nor_gl_1k.jpg"
+    },
+    {
+      "name": "ocean_buoy_diff",
+      "mimeType": "image/jpeg",
+      "uri": "textures/ocean_buoy_diff_1k.jpg"
+    },
+    {
+      "name": "ocean_buoy_metal-ocean_buoy_rough",
+      "mimeType": "image/jpeg",
+      "uri": "textures/ocean_buoy_arm_1k.jpg"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "ocean_buoy.bin",
+      "byteLength": 249984
     }
   ],
   "materials": [
     {
+      "name": "buoy",
       "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 3
+        }
+      },
       "emissiveFactor": [
         1,
         1,
         1
       ],
       "emissiveTexture": {
-        "index": 0
+        "index": 1
+      },
+      "normalTexture": {
+        "index": 2
       },
       "extensions": {
         "KHR_materials_emissive_strength": {
           "emissiveStrength": 10
-        }
-      },
-      "name": "buoy",
-      "normalTexture": {
-        "index": 1
-      },
-      "pbrMetallicRoughness": {
-        "baseColorTexture": {
-          "index": 2
-        },
-        "metallicRoughnessTexture": {
-          "index": 3
         }
       }
     }
@@ -57,128 +148,33 @@
       "primitives": [
         {
           "attributes": {
-            "POSITION": 0,
-            "NORMAL": 1,
-            "TEXCOORD_0": 2
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3
           },
-          "indices": 3,
-          "material": 0
+          "mode": 4,
+          "material": 0,
+          "indices": 0
         }
       ]
     }
   ],
-  "textures": [
+  "nodes": [
     {
-      "sampler": 0,
-      "source": 0
-    },
-    {
-      "sampler": 0,
-      "source": 1
-    },
-    {
-      "sampler": 0,
-      "source": 2
-    },
-    {
-      "sampler": 0,
-      "source": 3
+      "name": "ocean_buoy",
+      "mesh": 0
     }
   ],
-  "images": [
+  "scenes": [
     {
-      "mimeType": "image/jpeg",
-      "name": "ocean_buoy_emission",
-      "uri": "textures/ocean_buoy_emission_1k.jpg"
-    },
-    {
-      "mimeType": "image/jpeg",
-      "name": "ocean_buoy_nor_gl",
-      "uri": "textures/ocean_buoy_nor_gl_1k.jpg"
-    },
-    {
-      "mimeType": "image/jpeg",
-      "name": "ocean_buoy_diff",
-      "uri": "textures/ocean_buoy_diff_1k.jpg"
-    },
-    {
-      "mimeType": "image/jpeg",
-      "name": "ocean_buoy_metal-ocean_buoy_rough",
-      "uri": "textures/ocean_buoy_arm_1k.jpg"
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
     }
   ],
-  "accessors": [
-    {
-      "bufferView": 0,
-      "componentType": 5126,
-      "count": 11025,
-      "max": [
-        0.5905362963676453,
-        1.84686279296875,
-        0.4760739803314209
-      ],
-      "min": [
-        -0.4760739803314209,
-        -0.8093715310096741,
-        -0.4760739803314209
-      ],
-      "type": "VEC3"
-    },
-    {
-      "bufferView": 1,
-      "componentType": 5126,
-      "count": 11025,
-      "type": "VEC3"
-    },
-    {
-      "bufferView": 2,
-      "componentType": 5126,
-      "count": 11025,
-      "type": "VEC2"
-    },
-    {
-      "bufferView": 3,
-      "componentType": 5123,
-      "count": 36720,
-      "type": "SCALAR"
-    }
-  ],
-  "bufferViews": [
-    {
-      "buffer": 0,
-      "byteLength": 132300,
-      "byteOffset": 0,
-      "target": 34962
-    },
-    {
-      "buffer": 0,
-      "byteLength": 132300,
-      "byteOffset": 132300,
-      "target": 34962
-    },
-    {
-      "buffer": 0,
-      "byteLength": 88200,
-      "byteOffset": 264600,
-      "target": 34962
-    },
-    {
-      "buffer": 0,
-      "byteLength": 73440,
-      "byteOffset": 352800,
-      "target": 34963
-    }
-  ],
-  "samplers": [
-    {
-      "magFilter": 9729,
-      "minFilter": 9987
-    }
-  ],
-  "buffers": [
-    {
-      "byteLength": 426240,
-      "uri": "ocean_buoy.bin"
-    }
+  "scene": 0,
+  "extensionsUsed": [
+    "KHR_materials_emissive_strength"
   ]
 }

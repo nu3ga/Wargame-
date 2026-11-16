@@ -79,7 +79,7 @@ interface ManagedPropLayer {
 }
 
 function buildMergedPbrProp(
-  root: THREE.Object3D,
+  root: THREE.Object3D | null | undefined,
   options: {
     targetHeightM?: number;
     targetWidthM?: number;
@@ -89,6 +89,7 @@ function buildMergedPbrProp(
     doubleSided?: boolean;
   }
 ): { geometry: THREE.BufferGeometry; materials: THREE.MeshStandardMaterial[] } | null {
+  if (!root) return null;
   root.updateMatrixWorld(true);
   const meshes: THREE.Mesh[] = [];
   root.traverse((obj) => {
@@ -172,6 +173,14 @@ export async function loadAaaVillageProps(
   maxAnisotropy: number
 ): Promise<AaaVillagePropsHandle> {
   const loader = new GLTFLoader();
+  const loadOptionalModel = async (url: string) => {
+    try {
+      return await loader.loadAsync(url);
+    } catch (error) {
+      console.warn(`Unable to load village prop ${url}; continuing with the remaining assets.`, error);
+      return null;
+    }
+  };
   const disposables: { dispose: () => void }[] = [];
   const managedLayers: ManagedPropLayer[] = [];
   const dummy = new THREE.Object3D();
@@ -222,47 +231,47 @@ export async function loadAaaVillageProps(
     oldTyreGltf,
     coveredCarGltf,
   ] = await Promise.all([
-    loader.loadAsync('/assets/props/street_lamp_01/street_lamp_01_1k.gltf'),
-    loader.loadAsync('/assets/props/painted_wooden_bench/painted_wooden_bench_1k.gltf'),
-    loader.loadAsync('/assets/props/wooden_picnic_table/wooden_picnic_table_1k.gltf'),
-    loader.loadAsync('/assets/props/utility_box_01/utility_box_01_1k.gltf'),
-    loader.loadAsync('/assets/props/fire_hydrant/fire_hydrant_1k.gltf'),
-    loader.loadAsync('/assets/props/metal_trash_can/metal_trash_can_1k.gltf'),
-    loader.loadAsync('/assets/props/wine_barrel_01/wine_barrel_01_1k.gltf'),
-    loader.loadAsync('/assets/props/wooden_crate_01/wooden_crate_01_1k.gltf'),
-    loader.loadAsync('/assets/props/wooden_bucket_01/wooden_bucket_01_1k.gltf'),
-    loader.loadAsync('/assets/props/planter_box_01/planter_box_01_1k.gltf'),
-    loader.loadAsync('/assets/props/stone_fire_pit/stone_fire_pit_1k.gltf'),
-    loader.loadAsync('/assets/props/ammo_box/ammo_box_1k.gltf'),
-    loader.loadAsync('/assets/props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_1k.gltf'),
-    loader.loadAsync('/assets/props/standing_chalkboard_01/standing_chalkboard_01_1k.gltf'),
-    loader.loadAsync('/assets/props/street_lamp_02/street_lamp_02_1k.gltf'),
-    loader.loadAsync('/assets/props/painted_wooden_chair_01/painted_wooden_chair_01_1k.gltf'),
-    loader.loadAsync('/assets/props/painted_wooden_table/painted_wooden_table_1k.gltf'),
-    loader.loadAsync('/assets/props/lifebuoy/lifebuoy_1k.gltf'),
-    loader.loadAsync('/assets/props/ocean_buoy/ocean_buoy_1k.gltf'),
-    loader.loadAsync('/assets/props/wooden_crate_02/wooden_crate_02_1k.gltf'),
-    loader.loadAsync('/assets/props/wicker_basket_01/wicker_basket_01_1k.gltf'),
-    loader.loadAsync('/assets/props/wooden_ladder/wooden_ladder_1k.gltf'),
-    loader.loadAsync('/assets/props/wooden_axe_02/wooden_axe_02_1k.gltf'),
-    loader.loadAsync('/assets/props/wooden_bucket_02/wooden_bucket_02_1k.gltf'),
-    loader.loadAsync('/assets/props/watering_can_metal_01/watering_can_metal_01_1k.gltf'),
-    loader.loadAsync('/assets/props/rusted_spade_01/rusted_spade_01_1k.gltf'),
-    loader.loadAsync('/assets/props/wooden_lantern_01/wooden_lantern_01_1k.gltf'),
-    loader.loadAsync('/assets/props/concrete_road_barrier_02/concrete_road_barrier_02_1k.gltf'),
-    loader.loadAsync('/assets/props/water_manhole_cover/water_manhole_cover_1k.gltf'),
-    loader.loadAsync('/assets/props/utility_box_02/utility_box_02_1k.gltf'),
-    loader.loadAsync('/assets/props/planter_box_02/planter_box_02_1k.gltf'),
-    loader.loadAsync('/assets/props/planter_pot_clay/planter_pot_clay_1k.gltf'),
-    loader.loadAsync('/assets/props/large_iron_gate/large_iron_gate_1k.gltf'),
-    loader.loadAsync('/assets/props/horse_statue_01/horse_statue_01_1k.gltf'),
-    loader.loadAsync('/assets/props/old_military_crate/old_military_crate_1k.gltf'),
-    loader.loadAsync('/assets/props/metal_jerrycan_green/metal_jerrycan_green_1k.gltf'),
-    loader.loadAsync('/assets/props/barrel_03/barrel_03_1k.gltf'),
-    loader.loadAsync('/assets/props/hand_truck/hand_truck_1k.gltf'),
-    loader.loadAsync('/assets/props/compost_bags/compost_bags_1k.gltf'),
-    loader.loadAsync('/assets/props/old_tyre/old_tyre_1k.gltf'),
-    loader.loadAsync('/assets/props/covered_car/covered_car_1k.gltf'),
+    loadOptionalModel('/assets/props/street_lamp_01/street_lamp_01_1k.gltf'),
+    loadOptionalModel('/assets/props/painted_wooden_bench/painted_wooden_bench_1k.gltf'),
+    loadOptionalModel('/assets/props/wooden_picnic_table/wooden_picnic_table_1k.gltf'),
+    loadOptionalModel('/assets/props/utility_box_01/utility_box_01_1k.gltf'),
+    loadOptionalModel('/assets/props/fire_hydrant/fire_hydrant_1k.gltf'),
+    loadOptionalModel('/assets/props/metal_trash_can/metal_trash_can_1k.gltf'),
+    loadOptionalModel('/assets/props/wine_barrel_01/wine_barrel_01_1k.gltf'),
+    loadOptionalModel('/assets/props/wooden_crate_01/wooden_crate_01_1k.gltf'),
+    loadOptionalModel('/assets/props/wooden_bucket_01/wooden_bucket_01_1k.gltf'),
+    loadOptionalModel('/assets/props/planter_box_01/planter_box_01_1k.gltf'),
+    loadOptionalModel('/assets/props/stone_fire_pit/stone_fire_pit_1k.gltf'),
+    loadOptionalModel('/assets/props/ammo_box/ammo_box_1k.gltf'),
+    loadOptionalModel('/assets/props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_1k.gltf'),
+    loadOptionalModel('/assets/props/standing_chalkboard_01/standing_chalkboard_01_1k.gltf'),
+    loadOptionalModel('/assets/props/street_lamp_02/street_lamp_02_1k.gltf'),
+    loadOptionalModel('/assets/props/painted_wooden_chair_01/painted_wooden_chair_01_1k.gltf'),
+    loadOptionalModel('/assets/props/painted_wooden_table/painted_wooden_table_1k.gltf'),
+    loadOptionalModel('/assets/props/lifebuoy/lifebuoy_1k.gltf'),
+    loadOptionalModel('/assets/props/ocean_buoy/ocean_buoy_1k.gltf'),
+    loadOptionalModel('/assets/props/wooden_crate_02/wooden_crate_02_1k.gltf'),
+    loadOptionalModel('/assets/props/wicker_basket_01/wicker_basket_01_1k.gltf'),
+    loadOptionalModel('/assets/props/wooden_ladder/wooden_ladder_1k.gltf'),
+    loadOptionalModel('/assets/props/wooden_axe_02/wooden_axe_02_1k.gltf'),
+    loadOptionalModel('/assets/props/wooden_bucket_02/wooden_bucket_02_1k.gltf'),
+    loadOptionalModel('/assets/props/watering_can_metal_01/watering_can_metal_01_1k.gltf'),
+    loadOptionalModel('/assets/props/rusted_spade_01/rusted_spade_01_1k.gltf'),
+    loadOptionalModel('/assets/props/wooden_lantern_01/wooden_lantern_01_1k.gltf'),
+    loadOptionalModel('/assets/props/concrete_road_barrier_02/concrete_road_barrier_02_1k.gltf'),
+    loadOptionalModel('/assets/props/water_manhole_cover/water_manhole_cover_1k.gltf'),
+    loadOptionalModel('/assets/props/utility_box_02/utility_box_02_1k.gltf'),
+    loadOptionalModel('/assets/props/planter_box_02/planter_box_02_1k.gltf'),
+    loadOptionalModel('/assets/props/planter_pot_clay/planter_pot_clay_1k.gltf'),
+    loadOptionalModel('/assets/props/large_iron_gate/large_iron_gate_1k.gltf'),
+    loadOptionalModel('/assets/props/horse_statue_01/horse_statue_01_1k.gltf'),
+    loadOptionalModel('/assets/props/old_military_crate/old_military_crate_1k.gltf'),
+    loadOptionalModel('/assets/props/metal_jerrycan_green/metal_jerrycan_green_1k.gltf'),
+    loadOptionalModel('/assets/props/barrel_03/barrel_03_1k.gltf'),
+    loadOptionalModel('/assets/props/hand_truck/hand_truck_1k.gltf'),
+    loadOptionalModel('/assets/props/compost_bags/compost_bags_1k.gltf'),
+    loadOptionalModel('/assets/props/old_tyre/old_tyre_1k.gltf'),
+    loadOptionalModel('/assets/props/covered_car/covered_car_1k.gltf'),
   ]);
 
   const placeProp = (
@@ -307,12 +316,12 @@ export async function loadAaaVillageProps(
 
   // 1. Cast-iron heritage streetlamps (4.35m) + warm glowing lantern bulbs
   placeProp(
-    buildMergedPbrProp(lampGltf.scene, { targetHeightM: 4.35, sinkY: -0.04, maxAnisotropy }),
+    buildMergedPbrProp(lampGltf?.scene, { targetHeightM: 4.35, sinkY: -0.04, maxAnisotropy }),
     config.lamps,
     'large',
     true
   );
-  if (config.lamps.length > 0) {
+  if (lampGltf && config.lamps.length > 0) {
     const bulbGeo = new THREE.SphereGeometry(0.11, 10, 8);
     const bulbMat = new THREE.MeshStandardMaterial({
       color: 0xffe4ad,
@@ -343,25 +352,25 @@ export async function loadAaaVillageProps(
 
   // 2-12. Original village props
   placeProp(
-    buildMergedPbrProp(benchGltf.scene, { targetWidthM: 1.55, sinkY: -0.025, maxAnisotropy }),
+    buildMergedPbrProp(benchGltf?.scene, { targetWidthM: 1.55, sinkY: -0.025, maxAnisotropy }),
     config.benches,
     'furniture',
     true
   );
   placeProp(
-    buildMergedPbrProp(picnicGltf.scene, { targetWidthM: 2.35, sinkY: -0.03, maxAnisotropy }),
+    buildMergedPbrProp(picnicGltf?.scene, { targetWidthM: 2.35, sinkY: -0.03, maxAnisotropy }),
     config.picnicTables,
     'furniture',
     true
   );
   placeProp(
-    buildMergedPbrProp(utilBoxGltf.scene, { targetHeightM: 1.22, sinkY: -0.03, maxAnisotropy }),
+    buildMergedPbrProp(utilBoxGltf?.scene, { targetHeightM: 1.22, sinkY: -0.03, maxAnisotropy }),
     config.utilityBoxes,
     'furniture',
     true
   );
   placeProp(
-    buildMergedPbrProp(hydrantGltf.scene, {
+    buildMergedPbrProp(hydrantGltf?.scene, {
       targetHeightM: 0.84,
       sinkY: -0.03,
       maxAnisotropy,
@@ -373,7 +382,7 @@ export async function loadAaaVillageProps(
   );
   const midTrash = Math.ceil(config.trashCans.length / 2);
   placeProp(
-    buildMergedPbrProp(trashGltf.scene, {
+    buildMergedPbrProp(trashGltf?.scene, {
       targetHeightM: 0.92,
       sinkY: -0.02,
       maxAnisotropy,
@@ -384,7 +393,7 @@ export async function loadAaaVillageProps(
     true
   );
   placeProp(
-    buildMergedPbrProp(trashGltf.scene, {
+    buildMergedPbrProp(trashGltf?.scene, {
       targetHeightM: 0.92,
       sinkY: -0.02,
       maxAnisotropy,
@@ -395,37 +404,37 @@ export async function loadAaaVillageProps(
     true
   );
   placeProp(
-    buildMergedPbrProp(barrelGltf.scene, { targetHeightM: 0.92, sinkY: -0.02, maxAnisotropy }),
+    buildMergedPbrProp(barrelGltf?.scene, { targetHeightM: 0.92, sinkY: -0.02, maxAnisotropy }),
     config.wineBarrels,
     'furniture',
     true
   );
   placeProp(
-    buildMergedPbrProp(crateGltf.scene, { targetWidthM: 0.95, sinkY: -0.02, maxAnisotropy }),
+    buildMergedPbrProp(crateGltf?.scene, { targetWidthM: 0.95, sinkY: -0.02, maxAnisotropy }),
     config.crates,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(bucketGltf.scene, { targetHeightM: 0.48, sinkY: -0.015, maxAnisotropy }),
+    buildMergedPbrProp(bucketGltf?.scene, { targetHeightM: 0.48, sinkY: -0.015, maxAnisotropy }),
     config.buckets,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(planterGltf.scene, { targetWidthM: 1.25, sinkY: -0.02, maxAnisotropy }),
+    buildMergedPbrProp(planterGltf?.scene, { targetWidthM: 1.25, sinkY: -0.02, maxAnisotropy }),
     config.planters,
     'furniture',
     true
   );
   placeProp(
-    buildMergedPbrProp(firePitGltf.scene, { targetWidthM: 1.55, sinkY: -0.05, maxAnisotropy }),
+    buildMergedPbrProp(firePitGltf?.scene, { targetWidthM: 1.55, sinkY: -0.05, maxAnisotropy }),
     config.firePits,
     'furniture',
     true
   );
   placeProp(
-    buildMergedPbrProp(ammoGltf.scene, { targetWidthM: 0.42, sinkY: -0.01, maxAnisotropy }),
+    buildMergedPbrProp(ammoGltf?.scene, { targetWidthM: 0.42, sinkY: -0.01, maxAnisotropy }),
     config.ammoBoxes,
     'detail',
     true
@@ -436,31 +445,31 @@ export async function loadAaaVillageProps(
   // =========================================================================
   // Cafe terrace & village furniture
   placeProp(
-    buildMergedPbrProp(cafeSetGltf.scene, { targetWidthM: 1.95, sinkY: -0.025, maxAnisotropy }),
+    buildMergedPbrProp(cafeSetGltf?.scene, { targetWidthM: 1.95, sinkY: -0.025, maxAnisotropy }),
     config.cafeSets,
     'furniture',
     true
   );
   placeProp(
-    buildMergedPbrProp(chalkboardGltf.scene, { targetHeightM: 1.22, sinkY: -0.02, maxAnisotropy }),
+    buildMergedPbrProp(chalkboardGltf?.scene, { targetHeightM: 1.22, sinkY: -0.02, maxAnisotropy }),
     config.chalkboards,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(lamp02Gltf.scene, { targetHeightM: 1.05, sinkY: 0, maxAnisotropy }),
+    buildMergedPbrProp(lamp02Gltf?.scene, { targetHeightM: 1.05, sinkY: 0, maxAnisotropy }),
     config.wallLamps,
     'furniture',
     true
   );
   placeProp(
-    buildMergedPbrProp(chair01Gltf.scene, { targetHeightM: 0.88, sinkY: -0.02, maxAnisotropy }),
+    buildMergedPbrProp(chair01Gltf?.scene, { targetHeightM: 0.88, sinkY: -0.02, maxAnisotropy }),
     config.woodenChairs,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(table01Gltf.scene, { targetWidthM: 1.45, sinkY: -0.02, maxAnisotropy }),
+    buildMergedPbrProp(table01Gltf?.scene, { targetWidthM: 1.45, sinkY: -0.02, maxAnisotropy }),
     config.woodenTables,
     'furniture',
     true
@@ -468,13 +477,13 @@ export async function loadAaaVillageProps(
 
   // River pier & maritime safety
   placeProp(
-    buildMergedPbrProp(lifebuoyGltf.scene, { targetWidthM: 0.72, sinkY: -0.01, maxAnisotropy }),
+    buildMergedPbrProp(lifebuoyGltf?.scene, { targetWidthM: 0.72, sinkY: -0.01, maxAnisotropy }),
     config.lifebuoys,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(oceanBuoyGltf.scene, { targetHeightM: 1.45, sinkY: -0.45, maxAnisotropy }),
+    buildMergedPbrProp(oceanBuoyGltf?.scene, { targetHeightM: 1.45, sinkY: -0.45, maxAnisotropy }),
     config.riverBuoys,
     'furniture',
     true
@@ -482,49 +491,49 @@ export async function loadAaaVillageProps(
 
   // Market, orchard, farmstead & craft clutter
   placeProp(
-    buildMergedPbrProp(crate02Gltf.scene, { targetWidthM: 1.05, sinkY: -0.02, maxAnisotropy }),
+    buildMergedPbrProp(crate02Gltf?.scene, { targetWidthM: 1.05, sinkY: -0.02, maxAnisotropy }),
     config.cargoCrates,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(wickerGltf.scene, { targetWidthM: 0.56, sinkY: -0.015, maxAnisotropy }),
+    buildMergedPbrProp(wickerGltf?.scene, { targetWidthM: 0.56, sinkY: -0.015, maxAnisotropy }),
     config.wickerBaskets,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(ladderGltf.scene, { targetHeightM: 2.75, sinkY: -0.03, maxAnisotropy }),
+    buildMergedPbrProp(ladderGltf?.scene, { targetHeightM: 2.75, sinkY: -0.03, maxAnisotropy }),
     config.ladders,
     'furniture',
     true
   );
   placeProp(
-    buildMergedPbrProp(axeGltf.scene, { targetHeightM: 0.86, sinkY: -0.02, maxAnisotropy }),
+    buildMergedPbrProp(axeGltf?.scene, { targetHeightM: 0.86, sinkY: -0.02, maxAnisotropy }),
     config.axes,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(bucket02Gltf.scene, { targetHeightM: 0.5, sinkY: -0.015, maxAnisotropy }),
+    buildMergedPbrProp(bucket02Gltf?.scene, { targetHeightM: 0.5, sinkY: -0.015, maxAnisotropy }),
     config.cooperBuckets,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(wateringCanGltf.scene, { targetHeightM: 0.38, sinkY: -0.01, maxAnisotropy }),
+    buildMergedPbrProp(wateringCanGltf?.scene, { targetHeightM: 0.38, sinkY: -0.01, maxAnisotropy }),
     config.wateringCans,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(spadeGltf.scene, { targetHeightM: 1.08, sinkY: -0.03, maxAnisotropy }),
+    buildMergedPbrProp(spadeGltf?.scene, { targetHeightM: 1.08, sinkY: -0.03, maxAnisotropy }),
     config.spades,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(lanternGltf.scene, { targetHeightM: 0.42, sinkY: -0.01, maxAnisotropy }),
+    buildMergedPbrProp(lanternGltf?.scene, { targetHeightM: 0.42, sinkY: -0.01, maxAnisotropy }),
     config.lanterns,
     'detail',
     false
@@ -532,19 +541,19 @@ export async function loadAaaVillageProps(
 
   // P120 road infrastructure & village street utilities
   placeProp(
-    buildMergedPbrProp(barrierGltf.scene, { targetWidthM: 2.05, sinkY: -0.03, maxAnisotropy }),
+    buildMergedPbrProp(barrierGltf?.scene, { targetWidthM: 2.05, sinkY: -0.03, maxAnisotropy }),
     config.roadBarriers,
     'furniture',
     true
   );
   placeProp(
-    buildMergedPbrProp(manholeGltf.scene, { targetWidthM: 0.82, sinkY: 0.015, maxAnisotropy }),
+    buildMergedPbrProp(manholeGltf?.scene, { targetWidthM: 0.82, sinkY: 0.015, maxAnisotropy }),
     config.manholeCovers,
     'detail',
     false
   );
   placeProp(
-    buildMergedPbrProp(utilBox02Gltf.scene, { targetHeightM: 1.32, sinkY: -0.03, maxAnisotropy }),
+    buildMergedPbrProp(utilBox02Gltf?.scene, { targetHeightM: 1.32, sinkY: -0.03, maxAnisotropy }),
     config.modernUtilBoxes,
     'furniture',
     true
@@ -552,19 +561,19 @@ export async function loadAaaVillageProps(
 
   // Heritage planters, manor gate & estate sculpture
   placeProp(
-    buildMergedPbrProp(planter02Gltf.scene, { targetWidthM: 1.4, sinkY: -0.025, maxAnisotropy }),
+    buildMergedPbrProp(planter02Gltf?.scene, { targetWidthM: 1.4, sinkY: -0.025, maxAnisotropy }),
     config.floralPlanters,
     'furniture',
     true
   );
   placeProp(
-    buildMergedPbrProp(clayPotGltf.scene, { targetHeightM: 0.54, sinkY: -0.015, maxAnisotropy }),
+    buildMergedPbrProp(clayPotGltf?.scene, { targetHeightM: 0.54, sinkY: -0.015, maxAnisotropy }),
     config.clayPots,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(ironGateGltf.scene, {
+    buildMergedPbrProp(ironGateGltf?.scene, {
       targetWidthM: 5.6,
       sinkY: -0.05,
       maxAnisotropy,
@@ -575,7 +584,7 @@ export async function loadAaaVillageProps(
     true
   );
   placeProp(
-    buildMergedPbrProp(horseStatueGltf.scene, { targetHeightM: 2.55, sinkY: -0.04, maxAnisotropy }),
+    buildMergedPbrProp(horseStatueGltf?.scene, { targetHeightM: 2.55, sinkY: -0.04, maxAnisotropy }),
     config.horseStatues,
     'large',
     true
@@ -583,7 +592,7 @@ export async function loadAaaVillageProps(
 
   // Hunting lodge, garage & industrial yard props
   placeProp(
-    buildMergedPbrProp(milCrateGltf.scene, {
+    buildMergedPbrProp(milCrateGltf?.scene, {
       targetWidthM: 1.1,
       sinkY: -0.02,
       maxAnisotropy,
@@ -594,37 +603,37 @@ export async function loadAaaVillageProps(
     true
   );
   placeProp(
-    buildMergedPbrProp(jerrycanGltf.scene, { targetHeightM: 0.5, sinkY: -0.01, maxAnisotropy }),
+    buildMergedPbrProp(jerrycanGltf?.scene, { targetHeightM: 0.5, sinkY: -0.01, maxAnisotropy }),
     config.jerrycans,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(barrel03Gltf.scene, { targetHeightM: 0.92, sinkY: -0.02, maxAnisotropy }),
+    buildMergedPbrProp(barrel03Gltf?.scene, { targetHeightM: 0.92, sinkY: -0.02, maxAnisotropy }),
     config.steelDrums,
     'furniture',
     true
   );
   placeProp(
-    buildMergedPbrProp(handTruckGltf.scene, { targetHeightM: 1.24, sinkY: -0.02, maxAnisotropy }),
+    buildMergedPbrProp(handTruckGltf?.scene, { targetHeightM: 1.24, sinkY: -0.02, maxAnisotropy }),
     config.handTrucks,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(compostGltf.scene, { targetWidthM: 1.45, sinkY: -0.02, maxAnisotropy }),
+    buildMergedPbrProp(compostGltf?.scene, { targetWidthM: 1.45, sinkY: -0.02, maxAnisotropy }),
     config.compostBags,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(oldTyreGltf.scene, { targetWidthM: 0.72, sinkY: -0.02, maxAnisotropy }),
+    buildMergedPbrProp(oldTyreGltf?.scene, { targetWidthM: 0.72, sinkY: -0.02, maxAnisotropy }),
     config.oldTyres,
     'detail',
     true
   );
   placeProp(
-    buildMergedPbrProp(coveredCarGltf.scene, { targetWidthM: 4.35, sinkY: -0.03, maxAnisotropy }),
+    buildMergedPbrProp(coveredCarGltf?.scene, { targetWidthM: 4.35, sinkY: -0.03, maxAnisotropy }),
     config.parkedCars,
     'large',
     true
@@ -638,7 +647,7 @@ export async function loadAaaVillageProps(
     if (!force && Number.isFinite(lastPropX)) {
       const dx = camX - lastPropX;
       const dz = camZ - lastPropZ;
-      if (dx * dx + dz * dz < 64) return; // Update every 8m
+      if (dx * dx + dz * dz < 9) return; // Refresh fades every 3m, without rebuilding each frame.
     }
     lastPropX = camX;
     lastPropZ = camZ;
