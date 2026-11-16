@@ -42,7 +42,7 @@ const INITIAL_HUD: WorldHudSnapshot = {
   selectedBuilding: null,
   importedModel: null,
   cameraPerspective: 'first_person',
-  atmosphere: 'golden',
+  atmosphere: 'overcast_rain',
   compassBearingDeg: 336,
   adsAlpha: 0,
   ammoInMag: 30,
@@ -60,7 +60,7 @@ export default function App() {
   const engineRef = useRef<RendaSceneEngine | null>(null);
   const [hud, setHud] = useState<WorldHudSnapshot>(INITIAL_HUD);
   const [muted, setMuted] = useState(false);
-  const [atmosphere, setAtmosphere] = useState<AtmospherePreset>('golden');
+  const [atmosphere, setAtmosphere] = useState<AtmospherePreset>('overcast_rain');
   const [tacticalDrawerOpen, setTacticalDrawerOpen] = useState(false);
   const [webglError, setWebglError] = useState<string | null>(null);
   const [quality, setQuality] = useState<RenderQuality>('balanced');

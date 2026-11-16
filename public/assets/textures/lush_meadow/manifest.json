@@ -1,0 +1,45 @@
+{
+  "asset": "Grass004",
+  "provider": "ambientCG",
+  "source": "https://ambientcg.com/view?id=Grass004",
+  "download": "https://ambientcg.com/get?file=Grass004_1K-JPG.zip",
+  "license": "CC0-1.0",
+  "license_source": "https://docs.ambientcg.com/license/",
+  "physical_size_m": [
+    1.4,
+    1.4
+  ],
+  "resolution": [
+    1024,
+    1024
+  ],
+  "technique": "Procedural material, as identified by ambientCG",
+  "description": "Dense green grass blades with natural straw and root variation; no broad exposed dirt areas or mowing stripes. Original albedo inspected before inclusion.",
+  "maps": [
+    {
+      "file": "diff.jpg",
+      "upstream_file": "Grass004_1K-JPG_Color.jpg",
+      "bytes": 1985561,
+      "sha256": "9e1c60da44b34a9738b1256ba827541f097dc583521b1d281e61b5f4b4217bc5"
+    },
+    {
+      "file": "nor_gl.jpg",
+      "upstream_file": "Grass004_1K-JPG_NormalGL.jpg",
+      "bytes": 2339612,
+      "sha256": "8014a81d896a5c589b60612a769bc39eb1213e48d96f6146f485ea36e9e9610f"
+    },
+    {
+      "file": "rough.jpg",
+      "upstream_file": "Grass004_1K-JPG_Roughness.jpg",
+      "bytes": 851664,
+      "sha256": "706580983860f942e141acdd68c4128dd683be50fcc5d85b7c67a9a3a8c7bac0"
+    },
+    {
+      "file": "ao.jpg",
+      "upstream_file": "Grass004_1K-JPG_AmbientOcclusion.jpg",
+      "bytes": 904824,
+      "sha256": "04dde15209751196f5d0fc84507e6e2fbd7876a766ba3ab158e061dd9b756b95"
+    }
+  ],
+  "total_bytes": 6081661
+}

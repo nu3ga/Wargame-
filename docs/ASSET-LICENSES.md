@@ -46,3 +46,13 @@ Two sky-only panoramas are included for the visible distant background. Both are
 | `public/assets/lighting/overcast_soil_puresky_2k.hdr` | [Overcast Soil (Pure Sky)](https://polyhaven.com/a/overcast_soil_puresky) | 2048 × 1024 | 4,568,000 bytes |
 
 The evening panorama has a low warm sunlit cloud sector and scattered photographic clouds. The overcast panorama has continuous grey cloud cover and diffuse light. Files are unmodified upstream HDR downloads, verified against official API byte counts and MD5 checksums; SHA-256 hashes and measured bright-sector orientations are recorded in `public/assets/lighting/manifest.json`. Both load and render in Three.js `HDRLoader`. Licensing is the same [Poly Haven CC0 asset license](https://polyhaven.com/license) cited above.
+
+## Lush grass ground material
+
+`public/assets/textures/lush_meadow/` contains the unmodified **ambientCG Grass004** 1K color, OpenGL normal, roughness, and ambient-occlusion maps. The material is published under **CC0 1.0 Universal**; ambientCG explicitly allows commercial use and redistribution of raw asset files in games. Attribution is retained voluntarily.
+
+- [Original Grass004 asset and downloads](https://ambientcg.com/view?id=Grass004)
+- [ambientCG license](https://docs.ambientcg.com/license/)
+- Physical tile size: approximately **1.4 × 1.4 m**; maps are **1024 × 1024**.
+- Upstream technique: procedural PBR material. Its albedo was visually inspected: dense green blades, varied directions, a small amount of natural straw/root color, and no large exposed brown soil patches or mowing stripes.
+- The engine-facing filenames `diff.jpg`, `nor_gl.jpg`, `rough.jpg`, and `ao.jpg` preserve the upstream bytes. Original filenames, download URL, byte counts, and SHA-256 hashes are in `public/assets/textures/lush_meadow/manifest.json`. The four selected maps total **6,081,661 bytes**; unused maps and authoring projects from the download ZIP are excluded.

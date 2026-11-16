@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { chooseLatvianTreeSpecies, createLatvianTreeOptions, LATVIAN_TREE_SPECIES } from './treeProfiles';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import type { RendaWorldDataset } from './types';
@@ -814,12 +815,16 @@ test('curved 3D grass cluster geometry, 3-level near tree branching, and extra f
     const x = pos.getX(i);
     const y = pos.getY(i);
     const z = pos.getZ(i);
+    const nx = nrm.getX(i);
     const ny = nrm.getY(i);
+    const nz = nrm.getZ(i);
     const r = col.getX(i);
     const g = col.getY(i);
     const b = col.getZ(i);
     assert.ok(Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z));
-    assert.ok(Number.isFinite(ny) && ny > 0.5);
+    assert.ok(Number.isFinite(nx) && Number.isFinite(ny) && Number.isFinite(nz));
+    assert.ok(Math.abs(Math.hypot(nx, ny, nz) - 1) < 0.001, 'Grass lighting normals must remain unit length');
+    assert.ok(ny > 0.15 && ny < 0.95, 'Upright blades need side-facing normals with a bounded upward sky-light bias');
     assert.ok(Number.isFinite(r) && Number.isFinite(g) && Number.isFinite(b) && g > 0);
     if (y < minY) minY = y;
     if (y > maxY) maxY = y;
@@ -832,6 +837,20 @@ test('curved 3D grass cluster geometry, 3-level near tree branching, and extra f
   assert.ok(minLum < 0.4 && maxLum > 0.75, 'Expected deep root AO to sunlit tip gradient');
   cluster.dispose();
 
+  const shortTurf = createCurvedGrassClusterGeometry(8, 0.5, 0.035, 0.11);
+  const turfPos = shortTurf.getAttribute('position');
+  for (let blade = 0; blade < 8; blade++) {
+    const offset = blade * 5;
+    const a = new THREE.Vector3().fromBufferAttribute(turfPos, offset);
+    const b = new THREE.Vector3().fromBufferAttribute(turfPos, offset + 1);
+    const base = a.clone().add(b).multiplyScalar(0.5);
+    const tip = new THREE.Vector3().fromBufferAttribute(turfPos, offset + 4);
+    const height = tip.y;
+    assert.ok(a.distanceTo(b) < height * 0.11, 'Short turf should have millimeter-width blades, not broad paper leaves');
+    assert.ok(Math.hypot(tip.x - base.x, tip.z - base.z) < height * 0.5, 'A short blade must arch within its own height');
+  }
+  shortTurf.dispose();
+
   const denseCluster = createCurvedGrassClusterGeometry(24, 0.72, 0.16, 0.50);
   const dPos = denseCluster.getAttribute('position') as THREE.BufferAttribute;
   assert.equal(dPos.count, 24 * 5);
@@ -842,8 +861,33 @@ test('curved 3D grass cluster geometry, 3-level near tree branching, and extra f
     const nearOpt = createKurzemeEzTreeOptions(sp, 0, 'near');
     assert.equal(nearOpt.branch.levels, 3);
     assert.ok(nearOpt.leaves.count >= 15);
-    assert.ok(nearOpt.leaves.size >= 3.0 && nearOpt.leaves.size <= 3.3);
+    // Photographic shoot cards must overlap along a terminal limb enough to form
+    // a crown, rather than tiny isolated leaves with open sky between every card.
+    const terminalShootArea = nearOpt.leaves.count * nearOpt.leaves.size ** 2;
+    const terminalBranchArea = nearOpt.branch.length[3] ** 2;
+    assert.ok(terminalShootArea / terminalBranchArea >= 4, `Expected connected shoot coverage on ${sp}`);
+    assert.ok(nearOpt.leaves.size < nearOpt.branch.length[2], `Leaf sprays should remain smaller than a secondary branch on ${sp}`);
   }
+
+  // The generator gives both crossed billboard planes the same input normal.
+  // Normalization must recover distinct surface directions before crown smoothing.
+  const bark = new THREE.CylinderGeometry(0.3, 0.5, 10, 6);
+  bark.translate(0, 5, 0);
+  const crossedSpray = new THREE.BufferGeometry();
+  crossedSpray.setAttribute('position', new THREE.Float32BufferAttribute([
+    -1, 6, 0, -1, 8, 0, 1, 8, 0, 1, 6, 0,
+    0, 6, -1, 0, 8, -1, 0, 8, 1, 0, 6, 1,
+  ], 3));
+  crossedSpray.setAttribute('normal', new THREE.Float32BufferAttribute(Array.from({ length: 8 }, () => [0, 0, 1]).flat(), 3));
+  crossedSpray.setIndex([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7]);
+  normalizeEzTreeGeometry(bark, crossedSpray, 'oak', 10.5);
+  const sprayNormals = crossedSpray.getAttribute('normal');
+  const frontNormal = new THREE.Vector3().fromBufferAttribute(sprayNormals, 0);
+  const sideNormal = new THREE.Vector3().fromBufferAttribute(sprayNormals, 4);
+  assert.ok(Math.abs(frontNormal.dot(sideNormal)) < 0.98, 'Perpendicular shoot planes need distinct lighting normals');
+  assert.ok(Math.abs(frontNormal.length() - 1) < 0.001 && Math.abs(sideNormal.length() - 1) < 0.001);
+  bark.dispose();
+  crossedSpray.dispose();
 
   const ashStat = fs.statSync(new URL('../../public/assets/foliage/leaves/ash_color.png', import.meta.url));
   assert.ok(ashStat.size > 1000, 'Expected non-empty extra ash leaf atlas asset');
@@ -890,3 +934,33 @@ test('metric building roof/wall UV projection prevents texture stretching and 2K
   }
 });
 
+
+
+test('Latvian botanical profiles preserve conifers and provide habitat-specific broadleaf architecture', () => {
+  const riparian = new Set<string>();
+  const park = new Set<string>();
+  for (let i = 0; i < 80; i++) {
+    for (const habitat of ['woodland', 'riparian', 'park'] as const) {
+      assert.equal(chooseLatvianTreeSpecies('pine', i * 7, i * 3, habitat), 'pine');
+      assert.equal(chooseLatvianTreeSpecies('spruce', i * 7, i * 3, habitat), 'spruce');
+    }
+    riparian.add(chooseLatvianTreeSpecies('birch', i * 7, i * 3, 'riparian'));
+    park.add(chooseLatvianTreeSpecies('oak', i * 7, i * 3, 'park'));
+  }
+  assert.ok(riparian.has('alder') && riparian.has('aspen'), 'Wet banks should mix alder and aspen with existing broadleaf trees');
+  assert.ok(park.has('linden') && park.has('ash') && park.has('oak'), 'Village parks should have multiple native crown types');
+  for (const species of LATVIAN_TREE_SPECIES) {
+    for (const lod of ['near', 'far'] as const) {
+      const options = createLatvianTreeOptions(species, 0, lod);
+      assert.ok(options.branch.length[0] > 20 && options.branch.length[1] > 0);
+      assert.ok(options.leaves.size < options.branch.length[2] && options.leaves.count >= 10);
+      const terminals = options.branch.children[0] * options.branch.children[1] * (lod === 'near' ? options.branch.children[2] : 1);
+      assert.ok(terminals * options.leaves.count <= 4000, 'Crowns must stay within the instanced geometry budget');
+    }
+  }
+  const aspen = createLatvianTreeOptions('aspen', 0, 'near');
+  const linden = createLatvianTreeOptions('linden', 0, 'near');
+  const alder = createLatvianTreeOptions('alder', 0, 'near');
+  assert.ok(aspen.branch.length[1] / aspen.branch.length[0] < linden.branch.length[1] / linden.branch.length[0], 'Aspen needs a narrower crown than park linden');
+  assert.ok(alder.branch.start[1] < aspen.branch.start[1], 'Wet-bank alder should fork lower than the clear-stem aspen');
+});

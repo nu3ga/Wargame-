@@ -28,7 +28,8 @@ export class ContactOcclusionPass extends GTAOPass {
       const mesh = object as THREE.Mesh;
       if (!mesh.isMesh) return;
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      if (materials.some((material) => material.transparent || material.alphaTest > 0 || (material as THREE.ShaderMaterial).isShaderMaterial)) {
+      if (materials.some((material) => material.transparent || material.alphaTest > 0 || (material as THREE.ShaderMaterial).isShaderMaterial
+        || /grass_blade|turf|flower|ground_sway/.test(material.customProgramCacheKey()))) {
         this.omitted.push(object);
       }
     });

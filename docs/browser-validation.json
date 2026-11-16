@@ -1,6 +1,6 @@
 {
   "browser": "Chromium, SwiftShader software WebGL2",
-  "viewport": "1024x640",
+  "viewport": "1280x800",
   "checks": [
     "initial asset loading",
     "two HDR environments and two pure-sky panoramas",
@@ -15,50 +15,112 @@
     "three quality pipelines",
     "saved quality preference",
     "Cinematic AO and MSAA",
-    "river water view"
+    "dense near grass geometry",
+    "eight populated Latvian species",
+    "checkpoint walking/vehicle clearance",
+    "longitudinal car collision",
+    "walkable workshop floor and driving height",
+    "batched static scenery"
   ],
+  "artChecks": {
+    "trees": {
+      "pine": 1665,
+      "spruce": 443,
+      "birch": 468,
+      "oak": 430,
+      "alder": 75,
+      "aspen": 166,
+      "linden": 40,
+      "ash": 120
+    },
+    "batching": {
+      "before": 401,
+      "after": 38
+    },
+    "dressingColliders": 38,
+    "workshopFloor": 16.939788401029748
+  },
   "renders": [
     {
-      "name": "renda-title",
+      "name": "v3-title",
       "quality": "performance",
       "frame": 148,
-      "calls": 2704,
-      "triangles": 6795801,
+      "calls": 2423,
+      "triangles": 9358377,
       "points": 0,
       "lines": 0,
-      "environmentIntensity": 0.8
+      "environmentIntensity": 0.52
     },
     {
-      "name": "renda-gameplay-performance",
+      "name": "v3-gameplay-performance",
       "quality": "performance",
       "frame": 152,
-      "calls": 1664,
-      "triangles": 8593631,
+      "calls": 1331,
+      "triangles": 10416737,
       "points": 0,
       "lines": 0,
-      "environmentIntensity": 0.8
+      "environmentIntensity": 0.52
     },
     {
-      "name": "renda-gameplay-cinematic",
+      "name": "v3-gameplay-cinematic",
       "quality": "cinematic",
       "frame": 174,
-      "calls": 2438,
-      "triangles": 10245164,
+      "calls": 2252,
+      "triangles": 14121449,
       "points": 0,
       "lines": 0,
-      "environmentIntensity": 0.8
+      "environmentIntensity": 0.52
     },
     {
-      "name": "renda-river-balanced",
-      "quality": "balanced",
-      "frame": 197,
-      "calls": 1303,
-      "triangles": 2868750,
+      "name": "v3-grass-close",
+      "quality": "cinematic",
+      "frame": 196,
+      "calls": 2614,
+      "triangles": 12093103,
       "points": 0,
       "lines": 0,
-      "environmentIntensity": 0.85
+      "environmentIntensity": 0.52
+    },
+    {
+      "name": "v3-workshop-balanced",
+      "quality": "balanced",
+      "frame": 213,
+      "calls": 1350,
+      "triangles": 11689061,
+      "points": 0,
+      "lines": 0,
+      "environmentIntensity": 0.52
     }
   ],
   "errors": [],
-  "failedRequests": []
+  "failedRequests": [],
+  "final_grass_calibration": {
+    "near_blade_height_m": [
+      0.07,
+      0.21
+    ],
+    "middle_blade_height_m": [
+      0.06,
+      0.18
+    ],
+    "renders": [
+      {
+        "name": "v3-gameplay-cinematic",
+        "frame": 166,
+        "calls": 2259,
+        "triangles": 14121631,
+        "points": 0,
+        "lines": 0
+      },
+      {
+        "name": "v3-grass-close",
+        "frame": 188,
+        "calls": 2614,
+        "triangles": 12093103,
+        "points": 0,
+        "lines": 0
+      }
+    ],
+    "errors": []
+  }
 }

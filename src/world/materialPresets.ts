@@ -677,7 +677,7 @@ const HOSTED_PBR_PRESETS: Record<string, HostedPbrSet> = {
   manor_ochre: { folder: 'painted_plaster_wall', tintHex: 0xe8cf96, repeatScale: 1.25, normalScale: 0.54, roughnessMul: 0.96, hasAo: true },
   red_brick: { folder: 'red_brick_03', tintHex: 0xe6beb0, repeatScale: 1.16, normalScale: 0.92, roughnessMul: 0.98, hasAo: true },
   fieldstone: { folder: 'rustic_stone_wall_02', tintHex: 0xd8d3c9, repeatScale: 1.14, normalScale: 1.06, roughnessMul: 0.98, hasAo: true },
-  clay_tile: { folder: 'clay_roof_tiles_02', tintHex: 0xe0aa94, repeatScale: 1.15, normalScale: 1.18, roughnessMul: 0.88, hasAo: true },
+  clay_tile: { folder: 'clay_roof_tiles_02', tintHex: 0xbeb8b1, repeatScale: 1.15, normalScale: 1.18, roughnessMul: 0.88, hasAo: true },
   crimson_manor: { folder: 'corrugated_iron', tintHex: 0x963234, repeatScale: 1.18, normalScale: 0.78, roughnessMul: 0.88, hasAo: true },
   standing_seam: { folder: 'corrugated_iron', tintHex: 0x5d6e78, repeatScale: 1.18, normalScale: 0.78, roughnessMul: 0.84, hasAo: true },
   zinc_seam: { folder: 'corrugated_iron', tintHex: 0xbac0c4, repeatScale: 1.18, normalScale: 0.92, roughnessMul: 0.72, hasAo: true },

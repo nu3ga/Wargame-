@@ -174,7 +174,7 @@ export function enhanceTerrainMaterial(
   detailTex?: TerrainDetailTextures
 ): void {
   const hasDetailTex = Boolean(detailTex?.grassDiff && detailTex?.forestDiff);
-  mat.customProgramCacheKey = () => (hasDetailTex ? 'v5_terrain_pbr_2k' : 'v5_terrain');
+  mat.customProgramCacheKey = () => (hasDetailTex ? 'v8_ground_substrate' : 'v8_ground_substrate_fallback');
   mat.onBeforeCompile = (shader) => {
     if (hasDetailTex && detailTex?.grassDiff && detailTex?.forestDiff) {
       shader.uniforms.uTerrainShortGrassMap = { value: detailTex.shortGrassDiff ?? detailTex.grassDiff };
@@ -219,7 +219,7 @@ uniform sampler2D uTerrainCliffNormal;\n`
     const texMicroSnippet = hasDetailTex
       ? `
 float detailWeight = 1.0 - smoothstep(24.0, 140.0, camDist);
-float shortTurfMask = clamp(0.56 + 0.34 * (1.0 - smoothstep(0.08, 0.28, aerialLuma)), 0.28, 0.92);
+float shortTurfMask = clamp(0.66 + 0.14 * (1.0 - smoothstep(0.08, 0.28, aerialLuma)), 0.60, 0.82);
 vec3 pbrGrass = lushGrass;
 vec3 pbrLoam = loamEarth;
 vec3 texCliff = vec3(0.32, 0.28, 0.22);
@@ -230,13 +230,13 @@ if (detailWeight > 0.01) {
   vec2 tUvB = vec2(vTerrainWorldPos.x * 0.28 + vTerrainWorldPos.z * 0.17, -vTerrainWorldPos.x * 0.17 + vTerrainWorldPos.z * 0.28);
   if (greenness > 0.04) {
     vec3 texShortGrass = (useDualTap
-      ? mix(texture2D(uTerrainShortGrassMap, tUvA).rgb, texture2D(uTerrainShortGrassMap, tUvB).rgb, 0.36)
+      ? mix(texture2D(uTerrainShortGrassMap, tUvA).rgb, texture2D(uTerrainShortGrassMap, tUvB).rgb, 0.12)
       : texture2D(uTerrainShortGrassMap, tUvA).rgb) * vec3(0.96, 1.01, 0.94);
     vec3 texLushGrass = useDualTap
-      ? mix(texture2D(uTerrainGrassMap, tUvA * 0.78).rgb, texture2D(uTerrainGrassMap, tUvB * 0.84).rgb, 0.38)
+      ? mix(texture2D(uTerrainGrassMap, tUvA * 0.78).rgb, texture2D(uTerrainGrassMap, tUvB * 0.84).rgb, 0.14)
       : texture2D(uTerrainGrassMap, tUvA * 0.78).rgb;
     vec3 blendedTurfTex = mix(texLushGrass, texShortGrass, shortTurfMask);
-    pbrGrass = mix(lushGrass, blendedTurfTex * (0.94 + 0.14 * tPatch), 0.86 * detailWeight);
+    pbrGrass = mix(lushGrass, blendedTurfTex * (0.94 + 0.14 * tPatch), 0.96 * detailWeight);
     if (camDist < 72.0) {
       float roughShort = texture2D(uTerrainShortGrassRough, tUvA).r;
       float roughLush = texture2D(uTerrainGrassRough, tUvA * 0.78).r;
@@ -775,17 +775,8 @@ normal = normalize(mix(normal, puddleNormalV, puddleMask * 0.94));`
       )
       .replace(
         '#include <opaque_fragment>',
-        `if (puddleMask > 0.02) {
-  vec3 rViewW = normalize(cameraPosition - vRoadWorldPos);
-  vec3 rNormW = normalize(vec3((rNoise(vRoadWorldPos.xz * 6.0) - 0.5) * 0.03, 1.0, (rNoise(vRoadWorldPos.xz * 6.0 + 3.1) - 0.5) * 0.03));
-  float rNdotV = clamp(dot(rNormW, rViewW), 0.02, 1.0);
-  float rFresnel = 0.04 + 0.96 * pow(1.0 - rNdotV, 4.0);
-  vec3 rRefl = reflect(-rViewW, rNormW);
-  vec3 rSkyRefl = mix(uRoadHorizonColor * 0.92, uRoadSkyColor * 1.08, smoothstep(-0.04, 0.5, rRefl.y));
-  vec3 rHalf = normalize(normalize(uRoadSunDir) + rViewW);
-  float rSpec = pow(max(dot(rNormW, rHalf), 0.0), 220.0) * 1.15;
-  outgoingLight = mix(outgoingLight, rSkyRefl, puddleMask * rFresnel * 0.72) + uRoadSunColor * (rSpec * puddleMask);
-}
+        `// Sky lighting and Fresnel reflections come from the photographic PBR environment.
+// Avoid painting a synthetic blue gradient over the asphalt's aggregate detail.
 #include <opaque_fragment>`
       );
   };

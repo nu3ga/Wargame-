@@ -994,9 +994,10 @@ export function createCurvedGrassClusterGeometry(
     const sinY = Math.sin(yaw);
 
     const h = minH + rand() * (maxH - minH);
-    // Natural meadow blade width (2.6-4.2cm) with anti-shimmer cross section
-    const halfW = 0.013 + rand() * 0.008;
-    const bend = 0.08 + rand() * 0.17;
+    // Width and arch scale with blade length. Fixed 4cm widths and 25cm bends
+    // turn a 5cm turf blade into broad horizontal paper instead of short grass.
+    const halfW = Math.max(0.0017, h * (0.018 + rand() * 0.018));
+    const bend = h * (0.18 + rand() * 0.28);
 
     // Warm Baltic meadow palette: rich olive-sage greens mixed with subtle golden dry culms
     const isDryCulm = rand() < 0.14;
@@ -1018,9 +1019,9 @@ export function createCurvedGrassClusterGeometry(
       const lx = -sinY * w;
       const lz = cosY * w;
 
-      const nx = cosY * (0.24 + t * 0.30);
-      const ny = 0.94;
-      const nz = sinY * (0.24 + t * 0.30);
+      const nx = cosY * (0.86 - t * 0.12);
+      const ny = 0.38 + t * 0.18;
+      const nz = sinY * (0.86 - t * 0.12);
       const nLen = Math.hypot(nx, ny, nz) || 1;
 
       const r = ao * bladeBright * (1.02 + bladeWarm * 0.85);
@@ -1035,9 +1036,9 @@ export function createCurvedGrassClusterGeometry(
     const tipY = h;
     const tipX = bx + cosY * bend;
     const tipZ = bz + sinY * bend;
-    const tnx = cosY * 0.48;
-    const tny = 0.88;
-    const tnz = sinY * 0.48;
+    const tnx = cosY * 0.68;
+    const tny = 0.64;
+    const tnz = sinY * 0.68;
     const tnLen = Math.hypot(tnx, tny, tnz) || 1;
     const tipAo = 1.06 * bladeBright;
     pos.push(tipX, tipY, tipZ);
@@ -1196,10 +1197,10 @@ export function createKurzemeEzTreeOptions(
         type: 'pine',
         billboard: 'double',
         angle: 50,
-        count: isNear ? 16 : 12,
+        count: isNear ? 18 : 14,
         start: 0.03,
-        size: isNear ? 3.18 : 4.25,
-        sizeVariance: 0.52,
+        size: isNear ? 3.85 : 5.4,
+        sizeVariance: 0.32,
         tint: 0xffffff,
         alphaTest: 0.4,
       },
@@ -1230,10 +1231,10 @@ export function createKurzemeEzTreeOptions(
         type: 'pine',
         billboard: 'double',
         angle: 48,
-        count: isNear ? 15 : 10,
+        count: isNear ? 18 : 14,
         start: 0.02,
-        size: isNear ? 3.08 : 3.95,
-        sizeVariance: 0.48,
+        size: isNear ? 3.8 : 5.15,
+        sizeVariance: 0.3,
         tint: 0xffffff,
         alphaTest: 0.4,
       },
@@ -1264,10 +1265,10 @@ export function createKurzemeEzTreeOptions(
         type: 'aspen',
         billboard: 'double',
         angle: 56,
-        count: isNear ? 17 : 12,
+        count: isNear ? 20 : 14,
         start: 0.03,
-        size: isNear ? 3.12 : 4.1,
-        sizeVariance: 0.52,
+        size: isNear ? 3.8 : 5.7,
+        sizeVariance: 0.32,
         tint: 0xffffff,
         alphaTest: 0.4,
       },
@@ -1297,10 +1298,10 @@ export function createKurzemeEzTreeOptions(
       type: 'oak',
       billboard: 'double',
       angle: 58,
-      count: isNear ? 18 : 12,
+      count: isNear ? 22 : 16,
       start: 0.03,
-      size: isNear ? 3.24 : 4.45,
-      sizeVariance: 0.54,
+      size: isNear ? 4.0 : 6.35,
+      sizeVariance: 0.32,
       tint: 0xffffff,
       alphaTest: 0.4,
     },
@@ -1379,6 +1380,9 @@ export function normalizeEzTreeGeometry(
     Math.hypot(Math.max(Math.abs(cBox.min.x), Math.abs(cBox.max.x)), Math.max(Math.abs(cBox.min.z), Math.abs(cBox.max.z)))
   );
 
+  // ez-tree assigns the same normal to both perpendicular planes in a double
+  // billboard. Recompute each plane before blending toward the crown surface.
+  leafGeo.computeVertexNormals();
   const lPos = leafGeo.attributes.position as THREE.BufferAttribute;
   const lNrm = leafGeo.attributes.normal as THREE.BufferAttribute;
   const lCol = new Float32Array(lPos.count * 3);
@@ -1394,13 +1398,13 @@ export function normalizeEzTreeGeometry(
 
     origN.set(lNrm.getX(i), lNrm.getY(i), lNrm.getZ(i));
     sphN.set(x * 0.72, (y - midY) / (spanY * 0.5) + 0.45, z * 0.72).normalize();
-    origN.lerp(sphN, 0.52).normalize();
+    origN.lerp(sphN, 0.68).normalize();
     lNrm.setXYZ(i, origN.x, origN.y, origN.z);
 
-    const ao = THREE.MathUtils.clamp(0.24 + rFrac * 0.44 + hFrac * 0.36, 0.24, 1.04);
+    const ao = THREE.MathUtils.clamp(0.46 + rFrac * 0.3 + hFrac * 0.24, 0.46, 1.0);
     lCol[i * 3] = ao;
-    lCol[i * 3 + 1] = ao * 1.01;
-    lCol[i * 3 + 2] = ao * 0.94;
+    lCol[i * 3 + 1] = ao;
+    lCol[i * 3 + 2] = ao * 0.96;
   }
   leafGeo.setAttribute('color', new THREE.BufferAttribute(lCol, 3));
   branchGeo.computeBoundingSphere();

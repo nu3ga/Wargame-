@@ -7,11 +7,11 @@ import {
   deterministicSpatialNoise2D,
   findNearestRiverPoint,
   groundHeightAt,
+  pointInPolygon,
 } from './rendaMath';
 import type { BuildingCollider } from './rendaMath';
 import {
   createCurvedGrassClusterGeometry,
-  createKurzemeEzTreeOptions,
   createOverhaulLeafDepthMaterial,
   enhanceBarkMaterial,
   enhanceOverhaulFoliageMaterial,
@@ -29,9 +29,19 @@ import {
   partitionTreeInstancesByDistance3Tier,
 } from './drawDistance';
 import type { RendaWorldDataset } from './types';
+import treeWorldRaw from '../data/rendaWorld.json';
+import {
+  chooseLatvianTreeSpecies,
+  createLatvianTreeOptions,
+  LATVIAN_TREE_PROFILES,
+  LATVIAN_TREE_SPECIES,
+  type LatvianTreeSpecies,
+  type TreeHabitat,
+} from './treeProfiles';
 
 export interface TreeInstanceRecord {
   species: TreeSpecies;
+  botanicalSpecies?: LatvianTreeSpecies;
   variant: 0 | 1;
   matrix: THREE.Matrix4;
   canopyColor: THREE.Color;
@@ -41,6 +51,7 @@ export interface TreeInstanceRecord {
 }
 
 export interface AaaTreeSystemHandle {
+  setShadows?: (enabled: boolean) => void;
   updateLod: (camX: number, camZ: number, force?: boolean) => void;
   dispose: () => void;
 }
@@ -48,6 +59,15 @@ export interface AaaTreeSystemHandle {
 export interface AaaGroundCoverHandle {
   updateLod: (camX: number, camZ: number, force?: boolean) => void;
   dispose: () => void;
+}
+
+// Authored checkpoint, supply yard and workshop floors take precedence over
+// mapped/procedural vegetation, including trunks created before their colliders.
+function isTacticalClearing(x: number, z: number): boolean {
+  return (x >= 164.5 && x <= 173 && z >= 44 && z <= 82)
+    || (x >= 157.5 && x <= 165 && z >= 47 && z <= 61)
+    || (x >= 175 && x <= 186 && z >= 53 && z <= 74)
+    || (x >= 189 && x <= 202 && z >= 52 && z <= 66);
 }
 
 function makeSeededRand(seed: number): () => number {
@@ -91,7 +111,20 @@ function loadProcessedLeafTexture(
   img.onload = () => {
     const ctx = canvas.getContext('2d')!;
     ctx.clearRect(0, 0, size, size);
-    ctx.drawImage(img, 0, 0, size, size);
+    // The source is a photographic twig, while each ez-tree card represents a
+    // whole shoot. Build a full branching spray instead of scattering isolated
+    // tiny twigs over otherwise empty crowns. Alpha stays fully photographic.
+    const conifer = url.includes('pine_color');
+    const shoots = conifer
+      ? [{ x: 0.5, y: 0.98, a: -0.1, s: 1.02 }, { x: 0.55, y: 0.83, a: 0.28, s: 0.67 }]
+      : [{ x: 0.48, y: 0.82, a: -0.74, s: 0.83 }, { x: 0.52, y: 0.85, a: 0.72, s: 0.84 }, { x: 0.51, y: 0.98, a: 0.04, s: 0.95 }];
+    for (const shoot of shoots) {
+      ctx.save();
+      ctx.translate(size * shoot.x, size * shoot.y);
+      ctx.rotate(shoot.a);
+      ctx.drawImage(img, -size * shoot.s * 0.5, -size * shoot.s, size * shoot.s, size * shoot.s);
+      ctx.restore();
+    }
 
     const imgData = ctx.getImageData(0, 0, size, size);
     const data = imgData.data;
@@ -112,9 +145,9 @@ function loadProcessedLeafTexture(
         b *= 0.74;
       } else if (mode === 'natural') {
         // Ground raw bright studio leaf atlases slightly so sunlit crowns keep rich botanical depth
-        r *= 0.84;
-        g *= 0.86;
-        b *= 0.82;
+        r *= 0.88;
+        g *= 0.92;
+        b *= 0.86;
       } else {
         // Shift golden-yellow aspen leaf blades into Silver Birch greens while keeping brown twigs intact
         const max = Math.max(r, g, b);
@@ -310,7 +343,7 @@ export function buildAaaTreeSystem(
   const makeLeafMat = (tex: THREE.Texture, roughness = 0.76) => {
     const mat = new THREE.MeshStandardMaterial({
       map: tex,
-      alphaTest: 0.36,
+      alphaTest: 0.3,
       alphaToCoverage: !isSoftwareGl,
       side: THREE.DoubleSide,
       roughness,
@@ -321,35 +354,55 @@ export function buildAaaTreeSystem(
     return mat;
   };
 
-  const barkMats: Record<TreeSpecies, THREE.MeshStandardMaterial> = {
-    pine: makeBarkMat(pineBarkPbr, 0.9),
-    spruce: makeBarkMat(spruceBarkPbr, 0.92),
-    birch: makeBarkMat(birchBarkPbr, 0.78),
-    oak: makeBarkMat(oakBarkPbr, 0.9),
+  const barkSets = { pine: pineBarkPbr, willow: spruceBarkPbr, birch: birchBarkPbr, oak: oakBarkPbr };
+  const leafTextures: Record<LatvianTreeSpecies, [THREE.Texture, THREE.Texture]> = {
+    pine: [pineLeafTex, pineLeafTex],
+    spruce: [spruceLeafTex, spruceLeafTex],
+    birch: [birchGreenTex, birchGoldTex],
+    oak: [oakLeafTex, oakLeafTex],
+    alder: [birchGreenTex, birchGreenTex],
+    aspen: [birchGreenTex, birchGoldTex],
+    linden: [birchGreenTex, birchGreenTex],
+    ash: [ashLeafTex, ashLeafTex],
   };
+  const barkMats = {} as Record<LatvianTreeSpecies, THREE.MeshStandardMaterial>;
+  const leafMats: Record<string, THREE.MeshStandardMaterial> = {};
+  const depthMats: Record<string, THREE.MeshDepthMaterial> = {};
+  for (const species of LATVIAN_TREE_SPECIES) {
+    const profile = LATVIAN_TREE_PROFILES[species];
+    const bark = makeBarkMat(barkSets[profile.bark], species === 'birch' || species === 'aspen' ? 0.82 : 0.91);
+    bark.color.setHex(profile.barkTint);
+    barkMats[species] = bark;
+    for (const variant of [0, 1] as const) {
+      const key = `${species}_${variant}`;
+      const texture = leafTextures[species][variant];
+      const leaf = makeLeafMat(texture, species === 'alder' ? 0.86 : 0.8);
+      if (species === 'alder') leaf.color.setHex(0xd7e3d1);
+      if (species === 'aspen') leaf.color.setHex(0xf4f1dc);
+      if (species === 'ash') leaf.color.setHex(0xe3e9d8);
+      leafMats[key] = leaf;
+      depthMats[key] = createOverhaulLeafDepthMaterial(texture, windTimeUniform, 0.3);
+    }
+  }
 
-  const leafMats: Record<string, THREE.MeshStandardMaterial> = {
-    pine_0: makeLeafMat(pineLeafTex, 0.82),
-    pine_1: makeLeafMat(pineLeafTex, 0.82),
-    spruce_0: makeLeafMat(spruceLeafTex, 0.84),
-    spruce_1: makeLeafMat(spruceLeafTex, 0.84),
-    birch_0: makeLeafMat(birchGreenTex, 0.72),
-    birch_1: makeLeafMat(birchGoldTex, 0.72),
-    oak_0: makeLeafMat(oakLeafTex, 0.76),
-    oak_1: makeLeafMat(ashLeafTex, 0.75),
-  };
-
-  const depthMats: Record<string, THREE.MeshDepthMaterial> = {
-    pine: createOverhaulLeafDepthMaterial(pineLeafTex, windTimeUniform, 0.36),
-    spruce: createOverhaulLeafDepthMaterial(spruceLeafTex, windTimeUniform, 0.36),
-    birch_0: createOverhaulLeafDepthMaterial(birchGreenTex, windTimeUniform, 0.36),
-    birch_1: createOverhaulLeafDepthMaterial(birchGoldTex, windTimeUniform, 0.36),
-    oak_0: createOverhaulLeafDepthMaterial(oakLeafTex, windTimeUniform, 0.36),
-    oak_1: createOverhaulLeafDepthMaterial(ashLeafTex, windTimeUniform, 0.36),
-  };
+  const treeWorld = treeWorldRaw as unknown as RendaWorldDataset;
+  const parkWoods = treeWorld.woods.filter((wood) => wood.kind === 'park');
+  const botanicalRecords = records.filter((record) => !isTacticalClearing(record.x, record.z)).map((record) => {
+    if (record.botanicalSpecies) return record;
+    let habitat: TreeHabitat = 'woodland';
+    if (record.species !== 'pine' && record.species !== 'spruce') {
+      const river = findNearestRiverPoint(treeWorld.waterways, record.x, record.z);
+      if (river && river.distance < river.width * 0.5 + 22) habitat = 'riparian';
+      else if (parkWoods.some((park) => pointInPolygon(record.x, record.z, park.ring, park.holes))) habitat = 'park';
+    }
+    return { ...record, botanicalSpecies: chooseLatvianTreeSpecies(record.species, record.x, record.z, habitat) };
+  });
+  scene.userData.treeSpeciesCounts = Object.fromEntries(LATVIAN_TREE_SPECIES.map((species) => [
+    species, botanicalRecords.filter((record) => record.botanicalSpecies === species).length,
+  ]));
 
   interface Bucket {
-    species: TreeSpecies;
+    species: LatvianTreeSpecies;
     variant: 0 | 1;
     items: TreeInstanceRecord[];
     positions: { x: number; z: number }[];
@@ -363,24 +416,24 @@ export function buildAaaTreeSystem(
   const buckets: Bucket[] = [];
   const bucketGeometries: THREE.BufferGeometry[] = [];
 
-  for (const species of ['pine', 'spruce', 'birch', 'oak'] as TreeSpecies[]) {
+  for (const species of LATVIAN_TREE_SPECIES) {
     for (const variant of [0, 1] as (0 | 1)[]) {
-      const items = records.filter((r) => r.species === species && r.variant === variant);
+      const items = botanicalRecords.filter((r) => r.botanicalSpecies === species && r.variant === variant);
       if (items.length === 0) continue;
 
       const nearTree = new Tree();
-      nearTree.loadFromJson(createKurzemeEzTreeOptions(species, variant, 'near') as never);
+      nearTree.loadFromJson(createLatvianTreeOptions(species, variant, 'near') as never);
       const nearB = nearTree.branchesMesh.geometry;
       const nearL = nearTree.leavesMesh.geometry;
-      normalizeEzTreeGeometry(nearB, nearL, species, 10.5);
+      normalizeEzTreeGeometry(nearB, nearL, LATVIAN_TREE_PROFILES[species].family, 10.5);
       nearTree.branchesMesh.material = barkMats[species];
       (nearTree.leavesMesh.material as THREE.Material).dispose();
 
       const farTree = new Tree();
-      farTree.loadFromJson(createKurzemeEzTreeOptions(species, variant, 'far') as never);
+      farTree.loadFromJson(createLatvianTreeOptions(species, variant, 'far') as never);
       const farB = farTree.branchesMesh.geometry;
       const farL = farTree.leavesMesh.geometry;
-      normalizeEzTreeGeometry(farB, farL, species, 10.5);
+      normalizeEzTreeGeometry(farB, farL, LATVIAN_TREE_PROFILES[species].family, 10.5);
       (farTree.branchesMesh.material as THREE.Material).dispose();
       (farTree.leavesMesh.material as THREE.Material).dispose();
 
@@ -395,7 +448,7 @@ export function buildAaaTreeSystem(
 
       const leafKey = `${species}_${variant}`;
       const leafMat = leafMats[leafKey];
-      const depthMat = species === 'birch' || species === 'oak' ? depthMats[leafKey] : depthMats[species];
+      const depthMat = depthMats[leafKey];
 
       const nearCap = Math.min(items.length, isSoftwareGl ? 20 : 200);
       const farCap = items.length;
@@ -405,6 +458,10 @@ export function buildAaaTreeSystem(
       const farTrunk = new THREE.InstancedMesh(farB, barkMats[species], farCap);
       const farLeaf = new THREE.InstancedMesh(farL, leafMat, farCap);
 
+      nearTrunk.name = `${species} detailed trunks`;
+      nearLeaf.name = `${species} detailed crown`;
+      farTrunk.name = `${species} distant trunks`;
+      farLeaf.name = `${species} distant crown`;
       nearLeaf.customDepthMaterial = depthMat;
       farLeaf.customDepthMaterial = depthMat;
 
@@ -553,6 +610,13 @@ export function buildAaaTreeSystem(
 
   return {
     handle: {
+      setShadows: (enabled) => {
+        for (const bucket of buckets) {
+          bucket.nearTrunk.castShadow = enabled;
+          bucket.nearLeaf.castShadow = enabled;
+          bucket.nearLeaf.receiveShadow = enabled;
+        }
+      },
       updateLod,
       dispose: () => {
         for (const g of bucketGeometries) g.dispose();
@@ -938,6 +1002,7 @@ export async function loadAaaGroundCoverAndProps(
   }
 
   const isBlockedGlobal = (gx: number, gz: number, roadPad = 0.52) => {
+    if (isTacticalClearing(gx, gz)) return true;
     for (let i = 0; i < colliders.length; i++) {
       const c = colliders[i];
       if (gx >= c.minX - 0.85 && gx <= c.maxX + 0.85 && gz >= c.minZ - 0.85 && gz <= c.maxZ + 0.85) {
@@ -1021,7 +1086,7 @@ export async function loadAaaGroundCoverAndProps(
   // =========================================================================
   // 1. STREAMED CAMERA-CENTERED DENSE 3D GRASS BLADES & WILDFLOWER CARPET
   // =========================================================================
-  const bladeGrassGeo = createCurvedGrassClusterGeometry(24, 0.72, 0.16, 0.50);
+  const bladeGrassGeo = createCurvedGrassClusterGeometry(24, 0.84, 0.075, 0.29);
   const bladeGrassMat = new THREE.MeshStandardMaterial({
     color: 0xffffff,
     vertexColors: true,
@@ -1033,7 +1098,7 @@ export async function loadAaaGroundCoverAndProps(
   disposables.push(bladeGrassGeo, bladeGrassMat);
 
   // CPU rasterizers need a genuinely bounded near-field carpet; desktop GPU budgets stay intact.
-  const MAX_BLADE_GRASS = isSoftwareGl ? 900 : 22000;
+  const MAX_BLADE_GRASS = isSoftwareGl ? 1800 : 22000;
   const bladeGrassIm = new THREE.InstancedMesh(bladeGrassGeo, bladeGrassMat, MAX_BLADE_GRASS);
   bladeGrassIm.frustumCulled = false;
   bladeGrassIm.receiveShadow = true;
@@ -1043,8 +1108,8 @@ export async function loadAaaGroundCoverAndProps(
   scene.add(bladeGrassIm);
 
   // Low-profile 3D short-cut turf clusters filling road verges, trimmed yards, and non-tall-grass zones
-  const shortTurfGeo = createCurvedGrassClusterGeometry(10, 0.62, 0.06, 0.14);
-  const MAX_SHORT_TURF = isSoftwareGl ? 700 : 12000;
+  const shortTurfGeo = createCurvedGrassClusterGeometry(8, 0.5, 0.06, 0.18);
+  const MAX_SHORT_TURF = isSoftwareGl ? 19000 : 27000;
   const shortTurfIm = new THREE.InstancedMesh(shortTurfGeo, bladeGrassMat, MAX_SHORT_TURF);
   shortTurfIm.frustumCulled = false;
   shortTurfIm.receiveShadow = true;
@@ -1054,11 +1119,25 @@ export async function loadAaaGroundCoverAndProps(
   disposables.push(shortTurfGeo);
   scene.add(shortTurfIm);
 
+  // Fine near-field turf needs actual blade coverage, not just overlapping
+  // cluster bounds. Four times the blades fill the ground at grazing FPS angles;
+  // the lighter carpet continues through the middle and distance bands.
+  const denseTurfGeo = createCurvedGrassClusterGeometry(32, 0.5, 0.07, 0.21);
+  const MAX_DENSE_TURF = isSoftwareGl ? 5000 : 6500;
+  const denseTurfIm = new THREE.InstancedMesh(denseTurfGeo, bladeGrassMat, MAX_DENSE_TURF);
+  denseTurfIm.name = 'Dense near-field short turf';
+  denseTurfIm.frustumCulled = false;
+  denseTurfIm.receiveShadow = true;
+  denseTurfIm.setColorAt(0, new THREE.Color(1, 1, 1));
+  denseTurfIm.count = 0;
+  disposables.push(denseTurfGeo);
+  scene.add(denseTurfIm);
+
   const grassSrc = extractMeshes(grassGltf?.scene)[0];
   // The procedural carpet remains available if the optional grass model fails to download.
   const grassGeo = grassSrc
-    ? groundAndScaleMeshGeo(grassSrc, 0.54, -0.025)
-    : createCurvedGrassClusterGeometry(12, 0.54, 0.1, 0.32);
+    ? groundAndScaleMeshGeo(grassSrc, 0.3, -0.025)
+    : createCurvedGrassClusterGeometry(12, 0.62, 0.07, 0.26);
   const srcGrassMat = grassSrc
     ? (Array.isArray(grassSrc.material) ? grassSrc.material[0] : grassSrc.material) as THREE.MeshStandardMaterial
     : null;
@@ -1070,7 +1149,7 @@ export async function loadAaaGroundCoverAndProps(
     side: THREE.DoubleSide,
     roughness: 0.88,
     metalness: 0.0,
-    color: 0x8a9274,
+    color: 0xe1e5d5,
   });
   applyGroundSwayShader(grassMat, windTimeUniform, 0.25, 'v6_grass_sway');
   disposables.push(grassGeo, grassMat);
@@ -1137,12 +1216,12 @@ export async function loadAaaGroundCoverAndProps(
       return tris >= 240 && tris <= 900;
     })
     .slice(0, 4);
-  const medGrassIms = createStreamVariantMeshes(medGrassMeshes, isSoftwareGl ? 100 : 2400, {
+  const medGrassIms = createStreamVariantMeshes(medGrassMeshes, isSoftwareGl ? 140 : 2400, {
     footprintM: 0.68,
     sinkY: -0.02,
     alphaTest: 0.34,
     roughness: 0.86,
-    tintHex: 0x7e886c,
+    tintHex: 0xf0f0e2,
     swayAmp: 0.2,
     swayKey: 'v6_med_grass',
   });
@@ -1163,7 +1242,7 @@ export async function loadAaaGroundCoverAndProps(
     sinkY: -0.015,
     alphaTest: 0.32,
     roughness: 0.88,
-    tintHex: 0x7c8769,
+    tintHex: 0xeeeee2,
     swayAmp: 0.1,
     swayKey: 'v6_bermuda_grass',
   });
@@ -1177,7 +1256,7 @@ export async function loadAaaGroundCoverAndProps(
     sinkY: -0.015,
     alphaTest: 0.34,
     roughness: 0.82,
-    tintHex: 0xb6bfa6,
+    tintHex: 0xf1f0e7,
     swayAmp: 0.16,
     swayKey: 'v7_dandelion',
   });
@@ -1190,7 +1269,7 @@ export async function loadAaaGroundCoverAndProps(
     sinkY: -0.015,
     alphaTest: 0.34,
     roughness: 0.82,
-    tintHex: 0xb4bea4,
+    tintHex: 0xf1f0e7,
     swayAmp: 0.14,
     swayKey: 'v7_periwinkle',
   });
@@ -1203,7 +1282,7 @@ export async function loadAaaGroundCoverAndProps(
     sinkY: -0.015,
     alphaTest: 0.34,
     roughness: 0.82,
-    tintHex: 0xb6bfa6,
+    tintHex: 0xf1f0e7,
     swayAmp: 0.16,
     swayKey: 'v6_celandine',
   });
@@ -1216,7 +1295,7 @@ export async function loadAaaGroundCoverAndProps(
     sinkY: -0.02,
     alphaTest: 0.34,
     roughness: 0.84,
-    tintHex: 0xb0baa0,
+    tintHex: 0xf1f0e7,
     swayAmp: 0.18,
     swayKey: 'v6_nettle',
   });
@@ -1229,7 +1308,7 @@ export async function loadAaaGroundCoverAndProps(
     sinkY: -0.015,
     alphaTest: 0.34,
     roughness: 0.84,
-    tintHex: 0xb0baa0,
+    tintHex: 0xf1f0e7,
     swayAmp: 0.14,
     swayKey: 'v6_weed',
   });
@@ -1369,6 +1448,7 @@ export async function loadAaaGroundCoverAndProps(
       };
 
       const isCellBlocked = (gx: number, gz: number) => {
+        if (isTacticalClearing(gx, gz)) return true;
         for (let i = 0; i < cellCols.length; i++) {
           const c = cellCols[i];
           if (gx >= c.minX - 0.8 && gx <= c.maxX + 0.8 && gz >= c.minZ - 0.8 && gz <= c.maxZ + 0.8) {
@@ -1408,10 +1488,12 @@ export async function loadAaaGroundCoverAndProps(
           const finePatch = deterministicSpatialNoise2D(bx * 0.27 - 3.1, bz * 0.27 + 9.4);
           const strawMix = Math.max(0, (macroPatch - 0.54) * 1.35);
           const baseHue = 0.222 - strawMix * 0.078 + (finePatch - 0.5) * 0.025;
-          const baseSat = 0.32 - strawMix * 0.08;
+          const baseSat = 0.26 - strawMix * 0.06;
+          const growthPatch = THREE.MathUtils.smoothstep(macroPatch, 0.26, 0.76);
+          const bladeHeight = 0.52 + growthPatch * 0.66;
 
           // Dense zero-overdraw 3D curved grass-blade carpet (3-4 overlapping clusters per 1.5m cell)
-          const bladeCount = inRoadShoulder ? (vergeWeight > 0.25 ? 2 : 0) : 3 + (cellRand() < 0.65 ? 1 : 0);
+          const bladeCount = inRoadShoulder ? (vergeWeight > 0.25 ? 2 : 0) : 4 + Math.floor(growthPatch * 3) + (cellRand() < 0.45 ? 1 : 0);
           for (let k = 0; k < bladeCount; k++) {
             const spread = inRoadShoulder ? 0.54 : 1.44;
             const ox = k === 0 ? bx : bx + (cellRand() - 0.5) * spread;
@@ -1430,7 +1512,7 @@ export async function loadAaaGroundCoverAndProps(
               z: oz,
               yaw: cellRand() * Math.PI * 2,
               sx: sc * 1.12,
-              sy: sc * (0.90 + cellRand() * 0.28),
+              sy: sc * bladeHeight * (0.8 + cellRand() * 0.24),
               sz: sc * 1.12,
               r: tmpC.r,
               g: tmpC.g,
@@ -1441,27 +1523,29 @@ export async function loadAaaGroundCoverAndProps(
           }
 
           // Fine seedhead & tuft silhouette accents layered cleanly inside the 3D blade carpet
-          const tufts = inRoadShoulder ? (vergeWeight > 0.34 ? 1 : 0) : 1 + (cellRand() < 0.58 ? 1 : 0);
+          const tufts = inRoadShoulder
+            ? (vergeWeight > 0.5 && cellRand() < 0.42 ? 1 : 0)
+            : (cellRand() < growthPatch * 0.7 ? 1 + (growthPatch > 0.7 ? 1 : 0) : 0);
           for (let k = 0; k < tufts; k++) {
             const spread = inRoadShoulder ? 0.55 : 1.45;
             const ox = bx + (cellRand() - 0.5) * spread;
             const oz = bz + (cellRand() - 0.5) * spread;
             if (getRoadEdgeMargin(ox, oz) < -0.18) continue;
             const oy = groundHeightAt(world, ox, oz);
-            const sc = (inRoadShoulder ? 0.62 : 0.85) + cellRand() * (inRoadShoulder ? 0.42 : 0.72);
+            const sc = (inRoadShoulder ? 0.55 : 0.66) + cellRand() * 0.4;
             tmpC.setHSL(
               baseHue + (cellRand() - 0.5) * 0.032,
-              baseSat + cellRand() * 0.1,
-              0.11 + cellRand() * 0.06 + strawMix * 0.02
+              0.06 + cellRand() * 0.05,
+              0.74 + cellRand() * 0.14
             );
             points.push({
               x: ox,
               y: oy - 0.025,
               z: oz,
               yaw: cellRand() * Math.PI * 2,
-              sx: sc * 1.62,
-              sy: sc * 0.94,
-              sz: sc * 1.62,
+              sx: sc * 1.38,
+              sy: sc * (0.7 + growthPatch * 0.35),
+              sz: sc * 1.38,
               r: tmpC.r,
               g: tmpC.g,
               b: tmpC.b,
@@ -1471,12 +1555,12 @@ export async function loadAaaGroundCoverAndProps(
           }
 
           // Broad meadow clumps (matched olive-moss luminance band so zero chalky tufts stick out)
-          if (!inRoadShoulder && cellRand() < 0.72) {
+          if (!inRoadShoulder && cellRand() < 0.12 + growthPatch * 0.7) {
             const sc = 0.88 + cellRand() * 0.68;
             tmpC.setHSL(
               baseHue + (cellRand() - 0.5) * 0.028,
-              0.28 + cellRand() * 0.08,
-              0.135 + cellRand() * 0.055 + strawMix * 0.015
+              0.06 + cellRand() * 0.05,
+              0.74 + cellRand() * 0.14
             );
             points.push({
               x: bx + (cellRand() - 0.5) * 1.0,
@@ -1484,7 +1568,7 @@ export async function loadAaaGroundCoverAndProps(
               z: bz + (cellRand() - 0.5) * 1.0,
               yaw: cellRand() * Math.PI * 2,
               sx: sc * 1.24,
-              sy: sc * 0.94,
+              sy: sc * (0.5 + growthPatch * 0.4),
               sz: sc * 1.24,
               r: tmpC.r,
               g: tmpC.g,
@@ -1494,53 +1578,23 @@ export async function loadAaaGroundCoverAndProps(
             });
           }
 
-          // Dense low-profile 3D short-cut turf clusters for verges, trimmed yards & short-grass areas
-          const nearYard = !inRoadShoulder && Math.abs(roadMargin) < 4.5;
-          const shortCount = inRoadShoulder ? (vergeWeight > 0.1 ? 2 : 1) : nearYard ? 2 : 1;
-          for (let k = 0; k < shortCount; k++) {
-            const ox = k === 0 && bladeCount === 0 ? bx : bx + (cellRand() - 0.5) * (inRoadShoulder ? 0.65 : 1.38);
-            const oz = k === 0 && bladeCount === 0 ? bz : bz + (cellRand() - 0.5) * (inRoadShoulder ? 0.65 : 1.38);
-            if (getRoadEdgeMargin(ox, oz) < -0.22) continue;
-            const oy = groundHeightAt(world, ox, oz);
-            const sc = 0.85 + cellRand() * 0.45;
-            tmpC.setHSL(
-              baseHue + (cellRand() - 0.5) * 0.025,
-              baseSat + 0.04 + cellRand() * 0.08,
-              0.15 + cellRand() * 0.06
-            );
-            points.push({
-              x: ox,
-              y: oy,
-              z: oz,
-              yaw: cellRand() * Math.PI * 2,
-              sx: sc * 1.18,
-              sy: sc,
-              sz: sc * 1.18,
-              r: tmpC.r,
-              g: tmpC.g,
-              b: tmpC.b,
-              variant: 0,
-              layer: 'short',
-            });
-          }
-
           // Low spreading creeping turf carpets (deep mossy olive lightness, creeping onto road edges)
-          const bermudaChance = inRoadShoulder ? Math.max(0.45, vergeWeight * 0.94) : 0.94;
+          const bermudaChance = inRoadShoulder ? Math.max(0.18, vergeWeight * 0.48) : 0.18 + growthPatch * 0.5;
           if (cellRand() < bermudaChance) {
-            const sc = (inRoadShoulder ? 0.76 : 0.96) + cellRand() * (inRoadShoulder ? 0.45 : 0.68);
+            const sc = (inRoadShoulder ? 0.4 : 0.54) + cellRand() * 0.32;
             tmpC.setHSL(
               baseHue + (cellRand() - 0.5) * 0.03,
-              0.28 + cellRand() * 0.08,
-              0.135 + cellRand() * 0.055
+              0.06 + cellRand() * 0.05,
+              0.74 + cellRand() * 0.14
             );
             points.push({
               x: bx + (cellRand() - 0.5) * (inRoadShoulder ? 0.45 : 1.05),
               y: by - 0.02,
               z: bz + (cellRand() - 0.5) * (inRoadShoulder ? 0.45 : 1.05),
               yaw: cellRand() * Math.PI * 2,
-              sx: sc * 1.24,
-              sy: sc * 0.86,
-              sz: sc * 1.24,
+              sx: sc * 1.12,
+              sy: sc * (0.32 + growthPatch * 0.26),
+              sz: sc * 1.12,
               r: tmpC.r,
               g: tmpC.g,
               b: tmpC.b,
@@ -1554,7 +1608,7 @@ export async function loadAaaGroundCoverAndProps(
           const weedBoost = vergeWeight > 0.25 ? 0.18 : 0;
           if (!inRoadShoulder && hRoll < 0.045) {
             const sc = 0.78 + cellRand() * 0.45;
-            tmpC.setHSL(0.24, 0.14, 0.48 + cellRand() * 0.11);
+            tmpC.setHSL(0.24, 0.08, 0.72 + cellRand() * 0.13);
             points.push({
               x: bx,
               y: by,
@@ -1571,7 +1625,7 @@ export async function loadAaaGroundCoverAndProps(
             });
           } else if (!inRoadShoulder && hRoll < 0.085) {
             const sc = 0.82 + cellRand() * 0.5;
-            tmpC.setHSL(0.24, 0.14, 0.48 + cellRand() * 0.11);
+            tmpC.setHSL(0.24, 0.08, 0.72 + cellRand() * 0.13);
             points.push({
               x: bx,
               y: by,
@@ -1588,7 +1642,7 @@ export async function loadAaaGroundCoverAndProps(
             });
           } else if (!inRoadShoulder && hRoll < 0.12) {
             const sc = 0.8 + cellRand() * 0.5;
-            tmpC.setHSL(0.23, 0.14, 0.48 + cellRand() * 0.11);
+            tmpC.setHSL(0.23, 0.08, 0.72 + cellRand() * 0.13);
             points.push({
               x: bx,
               y: by,
@@ -1605,7 +1659,7 @@ export async function loadAaaGroundCoverAndProps(
             });
           } else if (hRoll < 0.15 + weedBoost * 0.45 && (!inRoadInterior || vergeWeight > 0.42)) {
             const sc = 0.72 + cellRand() * 0.48;
-            tmpC.setHSL(0.24, 0.15, 0.46 + cellRand() * 0.12);
+            tmpC.setHSL(0.24, 0.08, 0.7 + cellRand() * 0.14);
             points.push({
               x: bx,
               y: by,
@@ -1622,7 +1676,7 @@ export async function loadAaaGroundCoverAndProps(
             });
           } else if (hRoll < 0.18 + weedBoost && (!inRoadInterior || vergeWeight > 0.35)) {
             const sc = 0.74 + cellRand() * 0.48;
-            tmpC.setHSL(0.23, 0.15, 0.46 + cellRand() * 0.12);
+            tmpC.setHSL(0.23, 0.08, 0.7 + cellRand() * 0.14);
             points.push({
               x: bx,
               y: by,
@@ -1690,6 +1744,7 @@ export async function loadAaaGroundCoverAndProps(
       fadeStartRatio?: number;
     }
   ) => {
+    items = items.filter((item) => !isTacticalClearing(item.x, item.z));
     if (meshes.length === 0 || items.length === 0) return;
     const baseMat = (Array.isArray(meshes[0].material) ? meshes[0].material[0] : meshes[0].material) as THREE.MeshStandardMaterial;
     const mat = baseMat.clone();
@@ -2169,6 +2224,104 @@ export async function loadAaaGroundCoverAndProps(
   // =========================================================================
   // 3. UNIFIED SPATIAL GRASS STREAMING + DISTANCE CULLING UPDATE
   // =========================================================================
+  // A separate sub-meter turf lattice fills the spaces between taller meadow
+  // stands. Spatial bins keep road/building clearance cheap for tens of thousands
+  // of low curved-blade clusters, without caching that dense carpet across the map.
+  const TURF_BIN_M = 16;
+  type TurfBlockers = { roads: SegmentBox[]; rivers: SegmentBox[]; buildings: BuildingCollider[] };
+  const turfBins = new Map<string, TurfBlockers>();
+  const addTurfBlocker = <K extends keyof TurfBlockers>(
+    kind: K, item: TurfBlockers[K][number], minX: number, maxX: number, minZ: number, maxZ: number
+  ) => {
+    for (let bz = Math.floor(minZ / TURF_BIN_M); bz <= Math.floor(maxZ / TURF_BIN_M); bz++) {
+      for (let bx = Math.floor(minX / TURF_BIN_M); bx <= Math.floor(maxX / TURF_BIN_M); bx++) {
+        const key = `${bx},${bz}`;
+        let bin = turfBins.get(key);
+        if (!bin) {
+          bin = { roads: [], rivers: [], buildings: [] };
+          turfBins.set(key, bin);
+        }
+        (bin[kind] as Array<typeof item>).push(item);
+      }
+    }
+  };
+  for (const segment of roadSegs) addTurfBlocker('roads', segment, segment.minX - 0.25, segment.maxX + 0.25, segment.minZ - 0.25, segment.maxZ + 0.25);
+  for (const segment of riverSegs) addTurfBlocker('rivers', segment, segment.minX - 0.3, segment.maxX + 0.3, segment.minZ - 0.3, segment.maxZ + 0.3);
+  for (const building of colliders) addTurfBlocker('buildings', building, building.minX - 0.3, building.maxX + 0.3, building.minZ - 0.3, building.maxZ + 0.3);
+
+  const isTurfBlocked = (x: number, z: number) => {
+    if (isTacticalClearing(x, z)) return true;
+    const bin = turfBins.get(`${Math.floor(x / TURF_BIN_M)},${Math.floor(z / TURF_BIN_M)}`);
+    if (!bin) return false;
+    for (const building of bin.buildings) {
+      if (x >= building.minX - 0.25 && x <= building.maxX + 0.25 && z >= building.minZ - 0.25 && z <= building.maxZ + 0.25) return true;
+    }
+    for (const segments of [bin.roads, bin.rivers]) {
+      for (const segment of segments) {
+        const t = THREE.MathUtils.clamp(((x - segment.ax) * segment.vx + (z - segment.az) * segment.vz) / segment.l2, 0, 1);
+        const dx = x - (segment.ax + segment.vx * t);
+        const dz = z - (segment.az + segment.vz * t);
+        const edge = segment.halfR + 0.12;
+        if (dx * dx + dz * dz < edge * edge) return true;
+      }
+    }
+    return false;
+  };
+  const turfTiers = isSoftwareGl
+    ? [{ step: 0.32, inner: 0, outer: 12, width: 1.0 }, { step: 0.46, inner: 12, outer: 30, width: 1.4 }]
+    : [{ step: 0.28, inner: 0, outer: 12, width: 1.0 }, { step: 0.44, inner: 12, outer: 28, width: 1.3 }, { step: 0.68, inner: 28, outer: 42, width: 1.9 }];
+  const turfDrawRadius = isSoftwareGl ? 30 : 42;
+  const fillShortTurf = (camX: number, camZ: number): number => {
+    let count = 0;
+    let denseCount = 0;
+    for (const tier of turfTiers) {
+      const innerSq = tier.inner * tier.inner;
+      const outerSq = tier.outer * tier.outer;
+      const minGridX = Math.floor((camX - tier.outer) / tier.step);
+      const maxGridX = Math.ceil((camX + tier.outer) / tier.step);
+      const minGridZ = Math.floor((camZ - tier.outer) / tier.step);
+      const maxGridZ = Math.ceil((camZ + tier.outer) / tier.step);
+      for (let gz = minGridZ; gz <= maxGridZ; gz++) {
+        for (let gx = minGridX; gx <= maxGridX; gx++) {
+          const hash = hashCellCoords(gx, gz);
+          const jitterX = ((hash & 1023) / 1023 - 0.5) * 0.65;
+          const jitterZ = (((hash >>> 10) & 1023) / 1023 - 0.5) * 0.65;
+          const x = (gx + 0.5 + jitterX) * tier.step;
+          const z = (gz + 0.5 + jitterZ) * tier.step;
+          const distanceSq = (x - camX) * (x - camX) + (z - camZ) * (z - camZ);
+          if (distanceSq < innerSq || distanceSq >= outerSq) continue;
+          if (x < worldMinX || x > worldMaxX || z < worldMinZ || z > worldMaxZ || isTurfBlocked(x, z)) continue;
+          const y = groundHeightAt(world, x, z);
+          const dense = tier.inner === 0;
+          if (y < 0.75 || (dense ? denseCount >= MAX_DENSE_TURF : count >= MAX_SHORT_TURF)) continue;
+          const patch = deterministicSpatialNoise2D(x * 0.17 + 31, z * 0.17 - 14);
+          const seed = (hash >>> 20) / 4095;
+          const fade = computeDrawDistanceFade(Math.sqrt(distanceSq), turfDrawRadius - 7, turfDrawRadius);
+          if (fade < 0.035) continue;
+          scratchColor.setHSL(0.258 + patch * 0.024, 0.29 + patch * 0.08, 0.145 + patch * 0.045 + seed * 0.018);
+          dummy.position.set(x, y + 0.005, z);
+          dummy.rotation.set(0, seed * Math.PI * 2, 0);
+          const width = tier.width * (0.88 + seed * 0.25);
+          dummy.scale.set(width, (0.72 + patch * 0.5 + seed * 0.13) * fade, width);
+          dummy.updateMatrix();
+          const target = dense ? denseTurfIm : shortTurfIm;
+          const index = dense ? denseCount : count;
+          target.setMatrixAt(index, dummy.matrix);
+          target.setColorAt(index, scratchColor);
+          if (dense) denseCount++;
+          else count++;
+        }
+      }
+    }
+    denseTurfIm.count = denseCount;
+    denseTurfIm.visible = denseCount > 0;
+    if (denseCount > 0) {
+      denseTurfIm.instanceMatrix.needsUpdate = true;
+      if (denseTurfIm.instanceColor) denseTurfIm.instanceColor.needsUpdate = true;
+    }
+    return count;
+  };
+
   let lastGrassX = Number.NaN;
   let lastGrassZ = Number.NaN;
   let lastStaticX = Number.NaN;
@@ -2332,6 +2485,7 @@ export async function loadAaaGroundCoverAndProps(
         }
       }
 
+      shortIdx = fillShortTurf(camX, camZ);
       bladeGrassIm.count = bladeIdx;
       bladeGrassIm.visible = bladeIdx > 0;
       if (bladeIdx > 0) {
@@ -2385,6 +2539,7 @@ export async function loadAaaGroundCoverAndProps(
         document.body.dataset.grassStats = JSON.stringify({
           bladeIdx,
           shortIdx,
+          denseTurfIdx: denseTurfIm.count,
           grassIdx,
           med0: medCounts[0] || 0,
           berm0: bermudaCounts[0] || 0,

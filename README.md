@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. The game and bundled assets work without an API key. The optional AI material/building tools require `GEMINI_API_KEY` in `.env.local`; see `.env.example`.
+Open http://localhost:3000. The game and bundled assets work without an API key. The optional AI material/building tools require `GEMINI_API_KEY` in `.env` (copy `.env.example` and fill in your own key).
 
 ```sh
 npm run lint       # TypeScript
@@ -35,6 +35,16 @@ Choose **Performance**, **Balanced**, or **Cinematic** on the title or pause men
 
 Cinematic quality costs more GPU time. Browser performance depends on device, viewport and scene density; no desktop-GPU frame-rate claim is implied by the presets. The upgrade keeps the original world and game modes rather than replacing the project with an unrelated demo.
 
+## Denser village and northern European landscape
+
+The second art pass adds a continuous short-grass carpet with a denser 32-blade tier near the player, fuller photographic tree crowns, and eight Latvian tree profiles placed by habitat. The grass base uses CC0 ambientCG Grass004 at its physical scale.
+
+The village approach now includes a detailed field checkpoint, scanned supplies and a covered vehicle, sandbags, fencing, a communications mast, practical floodlights, layered road repairs/gravel/puddles, and atmospheric weather. Fourteen nearby buildings gain facade and roof detail; a maintenance workshop at (195, 59) has an accessible garage, interior, floor and entrance ramp. The first-person carbine, gloves and magazine exchange are also rebuilt.
+
+Choose **Cinematic** for the fullest lighting treatment. On accelerated devices, denser foliage budgets apply automatically. The defaults now open in wet overcast conditions; all five atmosphere options remain available from the tactical map.
+
+See [art direction and future asset approach](docs/ART-DIRECTION.md) for the project's preference for suitable ready-made assets and region-appropriate vegetation.
+
 ## Controls
 
 WASD to move; mouse to look after clicking the scene; Shift to sprint; Space to jump; C/Ctrl to crouch; Q/E to lean; left mouse to fire; right mouse/F to aim; R to reload; B to switch fire mode; I to inspect; V to change perspective; Tab for map, travel, weather and modes; Escape to pause. Touch controls are preserved.
@@ -45,4 +55,4 @@ See [third-party asset credits](docs/ASSET-LICENSES.md) for the newly sourced CC
 
 ![In-game title screen](docs/screenshots/title.png)
 
-See [verification notes](docs/VALIDATION.md) and the actual [Cinematic gameplay](docs/screenshots/cinematic.png) and [river](docs/screenshots/river.png) captures. The screenshots were rendered on the software fallback; they are not promotional reference images.
+See [verification notes](docs/VALIDATION.md) and the actual [Cinematic gameplay](docs/screenshots/cinematic.png), [grass close-up](docs/screenshots/grass.png), and [workshop](docs/screenshots/workshop.png) captures. The screenshots were rendered on the software fallback; they are not promotional reference images.

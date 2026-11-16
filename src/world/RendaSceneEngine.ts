@@ -105,6 +105,11 @@ import { createWeaponViewmodelRig, type WeaponViewmodelRig } from './weaponViewm
 import { ContactOcclusionPass } from './ContactOcclusionPass';
 import { BulletImpactSystem } from './BulletImpactSystem';
 import { QUALITY_STORAGE_KEY, RENDER_QUALITY, readRenderQuality } from './renderQuality';
+import { createTacticalVillage } from './tacticalVillage';
+import { createStreetSurfaces } from './streetSurfaces';
+import { createBuildingArt } from './buildingArt';
+import { createBattlefieldAtmosphere } from './battlefieldAtmosphere';
+import { batchStaticScenery } from './staticSceneBatches';
 import type {
   AtmospherePreset,
   BuildingDesignRecipe,
@@ -479,6 +484,13 @@ export class RendaSceneEngine {
   private renderQuality: RenderQuality = 'balanced';
   private bulletImpacts: BulletImpactSystem;
   private terrainMesh: THREE.Mesh | null = null;
+  private tacticalVillage: ReturnType<typeof createTacticalVillage> | null = null;
+  private streetSurfaces: ReturnType<typeof createStreetSurfaces> | null = null;
+  private buildingArt: ReturnType<typeof createBuildingArt> | null = null;
+  private battlefieldAtmosphere: ReturnType<typeof createBattlefieldAtmosphere> | null = null;
+  private staticScenery: ReturnType<typeof batchStaticScenery> | null = null;
+  private buildingCollisionBase: BuildingCollider[] = [];
+  private dressingColliders: BuildingCollider[] = [];
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private controls: OrbitControls;
@@ -591,7 +603,7 @@ export class RendaSceneEngine {
   private phase: GamePhase = 'title';
   private mode: PlayMode = 'walk';
   private cameraPerspective: CameraPerspective = 'first_person';
-  private atmosphere: AtmospherePreset = 'golden';
+  private atmosphere: AtmospherePreset = 'overcast_rain';
   private fpsState: FpsWeaponSpringState = createInitialFpsWeaponState();
   private fireMode: FireMode = 'SEMI';
   private ammoInMag = 30;
@@ -754,6 +766,23 @@ export class RendaSceneEngine {
     this.buildAtmosphereClouds();
     this.initParticles();
 
+    // Retain editable/animated objects; combine fixed scenery into spatially culled batches.
+    const excluded = new Set<THREE.Object3D>([
+      ...this.interactableWalls, ...this.roadAsphaltMeshes, ...this.roadGravelMeshes,
+      ...this.waterMeshes, ...this.landmarkDiamonds,
+    ]);
+    if (this.terrainMesh) excluded.add(this.terrainMesh);
+    for (const building of this.buildingMap.values()) if (building.detailGroup) excluded.add(building.detailGroup);
+    this.staticScenery = batchStaticScenery(this.scene, excluded);
+
+    this.buildingCollisionBase = this.colliders.slice();
+    this.tacticalVillage = createTacticalVillage(this.scene, WORLD, this.colliders, this.getMaxTexAnisotropy());
+    this.buildingArt = createBuildingArt(this.scene, WORLD, this.getMaxTexAnisotropy());
+    this.dressingColliders = [...this.tacticalVillage.colliders, ...this.buildingArt.colliders];
+    this.colliders.push(...this.dressingColliders);
+    this.streetSurfaces = createStreetSurfaces(this.scene, WORLD, this.colliders, this.getMaxTexAnisotropy());
+    this.battlefieldAtmosphere = createBattlefieldAtmosphere(this.scene, WORLD);
+
     // Build sweeping multi-landmark desktop flyover tour for title backdrop
     for (const [id, radius, height] of [
       ['church', 112, 34],
@@ -827,7 +856,7 @@ export class RendaSceneEngine {
     // Set initial positions & atmosphere
     this.playerY = groundHeightAt(WORLD, this.playerX, this.playerZ);
     this.syncActorTransforms();
-    this.setAtmosphere('golden');
+    this.setAtmosphere(this.atmosphere);
     this.activeMission = createNextCourierMission(
       WORLD.landmarks,
       this.playerX,
@@ -1005,9 +1034,9 @@ export class RendaSceneEngine {
       this.extraTextures.push(t);
       return t;
     };
-    const shortGrassDiff = loadTerrainDetail('/assets/textures/grass_ground/diff.jpg', true);
-    const shortGrassNormal = loadTerrainDetail('/assets/textures/grass_ground/nor_gl.jpg', false);
-    const shortGrassRough = loadTerrainDetail('/assets/textures/grass_ground/rough.jpg', false);
+    const shortGrassDiff = loadTerrainDetail('/assets/textures/lush_meadow/diff.jpg', true);
+    const shortGrassNormal = loadTerrainDetail('/assets/textures/lush_meadow/nor_gl.jpg', false);
+    const shortGrassRough = loadTerrainDetail('/assets/textures/lush_meadow/rough.jpg', false);
     const grassDiff = loadTerrainDetail('/assets/textures/leafy_grass/diff.jpg', true);
     const grassNormal = loadTerrainDetail('/assets/textures/leafy_grass/nor_gl.jpg', false);
     const grassRough = loadTerrainDetail('/assets/textures/leafy_grass/rough.jpg', false);
@@ -3252,6 +3281,28 @@ export class RendaSceneEngine {
     this.camZoomOffset = THREE.MathUtils.clamp(this.camZoomOffset + e.deltaY * 0.0045, -2.6, 10.5);
   };
 
+  private getMovementGroundHeight(x: number, z: number): number {
+    return this.buildingArt?.groundHeightAt(x, z) ?? groundHeightAt(WORLD, x, z);
+  }
+
+  private resolveActorCollisions(x: number, z: number, buildingRadius: number, propRadius: number) {
+    let resolvedX = x, resolvedZ = z, collided = false;
+    const offsets = buildingRadius > 2 ? [-1.25, 0, 1.25] : [0];
+    const headingX = Math.sin(this.playerHeading), headingZ = Math.cos(this.playerHeading);
+    // A car needs longitudinal bumper clearance while retaining its narrower road width.
+    for (let iteration = 0; iteration < 2; iteration++) {
+      const base = resolveBuildingCollisions(resolvedX, resolvedZ, buildingRadius, this.buildingCollisionBase);
+      resolvedX = base.x; resolvedZ = base.z; collided ||= base.collided;
+      for (const offset of offsets) {
+        const props = resolveBuildingCollisions(resolvedX + headingX * offset, resolvedZ + headingZ * offset, propRadius, this.dressingColliders, 0.12);
+        resolvedX = props.x - headingX * offset;
+        resolvedZ = props.z - headingZ * offset;
+        collided ||= props.collided;
+      }
+    }
+    return { x: resolvedX, z: resolvedZ, collided };
+  }
+
   private getRenderPixelRatio(): number {
     return Math.min(window.devicePixelRatio || 1, RENDER_QUALITY[this.renderQuality].pixelRatio);
   }
@@ -3296,6 +3347,7 @@ export class RendaSceneEngine {
   }
 
   private applyMaterialQuality(): void {
+    this.treeSystem?.setShadows?.(this.renderer.shadowMap.enabled);
     const coverage = RENDER_QUALITY[this.renderQuality].samples > 0;
     this.scene.traverse((object) => {
       const mesh = object as THREE.Mesh;
@@ -3681,6 +3733,10 @@ export class RendaSceneEngine {
       ...this.interactableWalls,
       ...this.roadAsphaltMeshes,
       ...this.roadGravelMeshes,
+      ...(this.tacticalVillage?.impactTargets ?? []),
+      ...(this.buildingArt?.impactTargets ?? []),
+      ...(this.streetSurfaces?.impactTargets ?? []),
+      ...(this.staticScenery?.impactTargets ?? []),
     ]);
 
     // Subtle muzzle smoke/spark particle in world space ahead of barrel
@@ -3839,7 +3895,7 @@ export class RendaSceneEngine {
       this.camera.lookAt(this.lookTargetSmooth);
       this.showBanner('Abava River Canoe', 'Paddle along the Īvande & Abava valley currents');
     } else if (next === 'drive') {
-      this.playerY = groundHeightAt(WORLD, this.playerX, this.playerZ);
+      this.playerY = this.getMovementGroundHeight(this.playerX, this.playerZ);
       if (!this.activeMission) {
         this.activeMission = createNextCourierMission(
           WORLD.landmarks,
@@ -3931,7 +3987,7 @@ export class RendaSceneEngine {
         this.playerX = lm.x + offX;
         this.playerZ = lm.z + offZ;
       }
-      const resolved = resolveBuildingCollisions(this.playerX, this.playerZ, 1.4, this.colliders);
+      const resolved = this.resolveActorCollisions(this.playerX, this.playerZ, 1.4, 0.45);
       this.playerX = resolved.x;
       this.playerZ = resolved.z;
     }
@@ -3980,6 +4036,10 @@ export class RendaSceneEngine {
 
   public setAtmosphere(preset: AtmospherePreset): void {
     this.atmosphere = preset;
+    this.tacticalVillage?.setAtmosphere(preset);
+    this.streetSurfaces?.setAtmosphere(preset);
+    this.buildingArt?.setAtmosphere(preset);
+    this.battlefieldAtmosphere?.setAtmosphere(preset);
     const profile = evaluateMoodColorProfile(preset);
     const skyUniforms = this.sky.material.uniforms;
 
@@ -4091,7 +4151,7 @@ export class RendaSceneEngine {
       return;
     }
     this.scene.environment = target.texture;
-    this.scene.environmentIntensity = this.atmosphere === 'twilight' ? 0.32 : overcast ? 0.85 : 0.8;
+    this.scene.environmentIntensity = this.atmosphere === 'twilight' ? 0.32 : this.atmosphere === 'overcast_rain' ? 0.52 : overcast ? 0.85 : 0.65;
     this.scene.environmentRotation.y = (overcast ? -0.2056 : 0.6596117388)
       - Math.atan2(this.sunDirUniform.value.z, this.sunDirUniform.value.x);
   }
@@ -4291,6 +4351,7 @@ export class RendaSceneEngine {
     entry.wallMaterialId = design.wallRecipe.id;
     entry.roofMaterialId = design.roofRecipe.id;
     entry.customDesign = design;
+    this.buildingArt?.setBuildingCustomized(buildingId, true);
     this.popAnims.set(entry.id, 0);
 
     // Update ring radius cleanly without resetting camera orbit if building is already focused
@@ -4421,6 +4482,7 @@ export class RendaSceneEngine {
     entry.wallMaterialId = entry.baseWallMaterialId;
     entry.roofMaterialId = entry.baseRoofMaterialId;
     entry.customDesign = null;
+    this.buildingArt?.setBuildingCustomized(buildingId, false);
     this.showBanner('Building Reset', `Restored original ${entry.name}`);
     this.emitHud(true);
   }
@@ -5098,6 +5160,9 @@ export class RendaSceneEngine {
   }
 
   private stepSimulation(dt: number, elapsed: number): void {
+    this.tacticalVillage?.update(dt, elapsed);
+    this.streetSurfaces?.update(dt, elapsed);
+    this.battlefieldAtmosphere?.update(dt, elapsed, this.camera);
     this.bulletImpacts.update(dt);
     this.windTimeUniform.value = elapsed;
     if (this.waterTexture) {
@@ -5267,7 +5332,7 @@ export class RendaSceneEngine {
         this.playerZ += Math.cos(this.playerHeading) * this.speed * dt;
       }
 
-      const resolved = resolveBuildingCollisions(this.playerX, this.playerZ, 0.85, this.colliders);
+      const resolved = this.resolveActorCollisions(this.playerX, this.playerZ, 0.85, 0.4);
       this.playerX = resolved.x;
       this.playerZ = resolved.z;
 
@@ -5275,7 +5340,7 @@ export class RendaSceneEngine {
       this.playerX = bounded.x;
       this.playerZ = bounded.z;
 
-      const groundY = groundHeightAt(WORLD, this.playerX, this.playerZ);
+      const groundY = this.getMovementGroundHeight(this.playerX, this.playerZ);
       const grounded = this.playerY <= groundY + 0.08 && this.playerVy <= 0.25;
       if (grounded) {
         this.coyoteTimer = 0.11;
@@ -5396,7 +5461,7 @@ export class RendaSceneEngine {
       this.playerX += Math.sin(this.playerHeading) * this.speed * dt;
       this.playerZ += Math.cos(this.playerHeading) * this.speed * dt;
 
-      const resolved = resolveBuildingCollisions(this.playerX, this.playerZ, 2.2, this.colliders);
+      const resolved = this.resolveActorCollisions(this.playerX, this.playerZ, 2.2, 1.0);
       if (resolved.collided) this.speed *= 0.4;
       this.playerX = resolved.x;
       this.playerZ = resolved.z;
@@ -5404,7 +5469,7 @@ export class RendaSceneEngine {
       const bounded = clampToPlayableBounds(WORLD, this.playerX, this.playerZ);
       this.playerX = bounded.x;
       this.playerZ = bounded.z;
-      this.playerY = groundHeightAt(WORLD, this.playerX, this.playerZ) + 0.08;
+      this.playerY = this.getMovementGroundHeight(this.playerX, this.playerZ) + 0.08;
 
       // Wheel rotation, steering & dynamic suspension pitch/roll + reactive brake lights
       const wheelSpin = (this.speed * dt) / 0.37;
@@ -5567,7 +5632,7 @@ export class RendaSceneEngine {
     }
 
     if (isFps) {
-      const fpsGround = groundHeightAt(WORLD, this.playerX, this.playerZ);
+      const fpsGround = this.getMovementGroundHeight(this.playerX, this.playerZ);
       this.fpsState = stepFpsWeaponPhysics(this.fpsState, dt, {
         aiming: this.isAiming && this.reloadTimer <= 0,
         crouching: this.isCrouching,
@@ -5621,7 +5686,7 @@ export class RendaSceneEngine {
         this.playerY + baseHeight + Math.sin(this.camPitch) * this.camDistSmooth * 0.68,
         this.playerZ + shoulderZ - Math.cos(this.camYaw) * Math.cos(this.camPitch) * this.camDistSmooth
       );
-      const camGround = groundHeightAt(WORLD, _camDesired.x, _camDesired.z) + 1.4;
+      const camGround = this.getMovementGroundHeight(_camDesired.x, _camDesired.z) + 1.4;
       if (_camDesired.y < camGround) _camDesired.y = camGround;
 
       const dampFactor = 1 - Math.exp(-12 * dt);
@@ -5829,6 +5894,11 @@ export class RendaSceneEngine {
     this.composerRenderTarget?.dispose();
     this.weaponViewmodel.dispose();
     this.bulletImpacts.dispose();
+    this.tacticalVillage?.dispose();
+    this.streetSurfaces?.dispose();
+    this.buildingArt?.dispose();
+    this.battlefieldAtmosphere?.dispose();
+    this.staticScenery?.dispose();
     this.envRenderTarget?.dispose();
     for (const target of this.outdoorEnvironments.values()) target.dispose();
     this.outdoorEnvironments.clear();
