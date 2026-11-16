@@ -1,0 +1,155 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 18954,
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 9599,
+      "max": [
+        0.29662641882896423,
+        1.4024649858474731,
+        0.5968921184539795
+      ],
+      "min": [
+        -0.2966264486312866,
+        0.0002388283610343933,
+        -0.09534838795661926
+      ],
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 9599,
+      "bufferView": 1,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 9599,
+      "bufferView": 1,
+      "byteOffset": 24
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 37908,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 37908,
+      "byteLength": 307168,
+      "byteStride": 32,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    }
+  ],
+  "images": [
+    {
+      "name": "hand_truck_nor_gl",
+      "mimeType": "image/jpeg",
+      "uri": "textures/hand_truck_nor_gl_1k.jpg"
+    },
+    {
+      "name": "hand_truck_diff",
+      "mimeType": "image/jpeg",
+      "uri": "textures/hand_truck_diff_1k.jpg"
+    },
+    {
+      "name": "hand_truck_metal-hand_truck_rough",
+      "mimeType": "image/jpeg",
+      "uri": "textures/hand_truck_arm_1k.jpg"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "hand_truck.bin",
+      "byteLength": 345076
+    }
+  ],
+  "materials": [
+    {
+      "name": "hand_truck",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "hand_truck",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "hand_truck",
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0
+}

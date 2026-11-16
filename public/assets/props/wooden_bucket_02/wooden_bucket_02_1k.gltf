@@ -1,0 +1,295 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 352,
+      "max": [
+        0.0034078359603881836,
+        0.0026351213455200195,
+        0.0691978856921196
+      ],
+      "min": [
+        -0.0041068196296691895,
+        -0.057280659675598145,
+        -0.06886958330869675
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 352,
+      "bufferView": 0,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 352,
+      "bufferView": 0,
+      "byteOffset": 24
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 1020,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 1020,
+      "bufferView": 1,
+      "byteOffset": 2040
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 17997,
+      "bufferView": 1,
+      "byteOffset": 4080
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 352,
+      "max": [
+        0.004279017448425293,
+        0.0033052563667297363,
+        0.06731092929840088
+      ],
+      "min": [
+        -0.0029658377170562744,
+        -0.05722625553607941,
+        -0.07084359228610992
+      ],
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 352,
+      "bufferView": 2,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 352,
+      "bufferView": 2,
+      "byteOffset": 24
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 4723,
+      "max": [
+        0.3075416684150696,
+        0.3506869375705719,
+        0.30760839581489563
+      ],
+      "min": [
+        -0.3077849745750427,
+        0.000261455774307251,
+        -0.3086950480937958
+      ],
+      "bufferView": 3,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 4723,
+      "bufferView": 3,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 4723,
+      "bufferView": 3,
+      "byteOffset": 24
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 11264,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 11264,
+      "byteLength": 40076,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 51340,
+      "byteLength": 11264,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 62604,
+      "byteLength": 151136,
+      "byteStride": 32,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    }
+  ],
+  "images": [
+    {
+      "name": "wooden_bucket_02_nor_gl",
+      "mimeType": "image/jpeg",
+      "uri": "textures/wooden_bucket_02_nor_gl_1k.jpg"
+    },
+    {
+      "name": "wooden_bucket_02_diff",
+      "mimeType": "image/jpeg",
+      "uri": "textures/wooden_bucket_02_diff_1k.jpg"
+    },
+    {
+      "name": "wooden_bucket_02_metal-wooden_bucket_02_rough",
+      "mimeType": "image/jpeg",
+      "uri": "textures/wooden_bucket_02_arm_1k.jpg"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "wooden_bucket_02.bin",
+      "byteLength": 213740
+    }
+  ],
+  "materials": [
+    {
+      "name": "wooden_bucket_02",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Plane.002",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 9,
+            "NORMAL": 10,
+            "TEXCOORD_0": 11
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 5
+        }
+      ]
+    },
+    {
+      "name": "Plane.003",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        }
+      ]
+    },
+    {
+      "name": "Plane.004",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6,
+            "NORMAL": 7,
+            "TEXCOORD_0": 8
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "wooden_bucket_02",
+      "mesh": 0
+    },
+    {
+      "name": "wooden_bucket_02_handle_02",
+      "translation": [
+        0.29324859380722046,
+        0.2572847008705139,
+        0.0009642299264669418
+      ],
+      "mesh": 1
+    },
+    {
+      "name": "wooden_bucket_02_handle_01",
+      "translation": [
+        -0.2936750054359436,
+        0.2570136487483978,
+        0.0009642299264669418
+      ],
+      "mesh": 2
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0,
+        1,
+        2
+      ]
+    }
+  ],
+  "scene": 0
+}

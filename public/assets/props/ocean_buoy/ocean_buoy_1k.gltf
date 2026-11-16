@@ -1,0 +1,180 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 18000,
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 6687,
+      "max": [
+        0.5897359848022461,
+        1.84686279296875,
+        0.4760739803314209
+      ],
+      "min": [
+        -0.4760739803314209,
+        -0.8093715310096741,
+        -0.4760739803314209
+      ],
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 6687,
+      "bufferView": 1,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 6687,
+      "bufferView": 1,
+      "byteOffset": 24
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 36000,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 36000,
+      "byteLength": 213984,
+      "byteStride": 32,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "source": 2,
+      "sampler": 0
+    },
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 3,
+      "sampler": 0
+    }
+  ],
+  "images": [
+    {
+      "name": "ocean_buoy_emission",
+      "mimeType": "image/jpeg",
+      "uri": "textures/ocean_buoy_emission_1k.jpg"
+    },
+    {
+      "name": "ocean_buoy_nor_gl",
+      "mimeType": "image/jpeg",
+      "uri": "textures/ocean_buoy_nor_gl_1k.jpg"
+    },
+    {
+      "name": "ocean_buoy_diff",
+      "mimeType": "image/jpeg",
+      "uri": "textures/ocean_buoy_diff_1k.jpg"
+    },
+    {
+      "name": "ocean_buoy_metal-ocean_buoy_rough",
+      "mimeType": "image/jpeg",
+      "uri": "textures/ocean_buoy_arm_1k.jpg"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "ocean_buoy.bin",
+      "byteLength": 249984
+    }
+  ],
+  "materials": [
+    {
+      "name": "buoy",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 3
+        }
+      },
+      "emissiveFactor": [
+        1,
+        1,
+        1
+      ],
+      "emissiveTexture": {
+        "index": 1
+      },
+      "normalTexture": {
+        "index": 2
+      },
+      "extensions": {
+        "KHR_materials_emissive_strength": {
+          "emissiveStrength": 10
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Plane.061",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "ocean_buoy",
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "KHR_materials_emissive_strength"
+  ]
+}

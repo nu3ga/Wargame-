@@ -1,0 +1,3830 @@
+{
+  "toolVersions": {
+    "gltfTransform": "4.5.1",
+    "meshoptimizer": "1.3.0"
+  },
+  "algorithm": "Weld identical vertices, geometric-error-bounded indexed simplification, compact vertex attributes.",
+  "defaultRelativeError": 0.002,
+  "maximumRelativeError": 0.006,
+  "policy": "Preserve all primitives below 2000 triangles, material assignments, texture bytes/URIs, node transforms, mesh names, normals, UVs and alpha settings. No mesh joins, texture compression, quantization or runtime decoder extensions.",
+  "files": [
+    {
+      "path": "public/assets/foliage/celandine_01/celandine_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 8966,
+      "trianglesAfter": 5662,
+      "geometryBytesBefore": 325768,
+      "geometryBytesAfter": 212696,
+      "materialCount": 1,
+      "primitiveCount": 5,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -1.144754022359848,
+            -0.007033416070044041,
+            -0.1588074117898941
+          ],
+          "max": [
+            1.0946883112192154,
+            0.1788182109594345,
+            0.14785060286521912
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -1.144754022359848,
+            -0.007033416070044041,
+            -0.1588074117898941
+          ],
+          "max": [
+            1.0946883112192154,
+            0.1788182109594345,
+            0.14785060286521912
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 622,
+          "after": 622,
+          "target": 2000
+        },
+        {
+          "index": 1,
+          "before": 599,
+          "after": 599,
+          "target": 2000
+        },
+        {
+          "index": 2,
+          "before": 4301,
+          "after": 1999,
+          "target": 2000
+        },
+        {
+          "index": 3,
+          "before": 3002,
+          "after": 2000,
+          "target": 2000
+        },
+        {
+          "index": 4,
+          "before": 442,
+          "after": 442,
+          "target": 2000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/dandelion_01/dandelion_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 54764,
+      "trianglesAfter": 9999,
+      "geometryBytesBefore": 1676648,
+      "geometryBytesAfter": 368028,
+      "materialCount": 1,
+      "primitiveCount": 5,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.006,
+      "boundsBefore": [
+        {
+          "min": [
+            -4.120149545371532,
+            -0.008377076126635075,
+            -0.13672634959220886
+          ],
+          "max": [
+            0.09414416551589966,
+            0.16179513931274414,
+            0.12093203514814377
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -4.120149545371532,
+            -0.008377076126635075,
+            -0.13672634959220886
+          ],
+          "max": [
+            0.09414416551589966,
+            0.16179513931274414,
+            0.12093203514814377
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 23542,
+          "after": 2000,
+          "target": 2000
+        },
+        {
+          "index": 1,
+          "before": 23358,
+          "after": 2000,
+          "target": 2000
+        },
+        {
+          "index": 2,
+          "before": 3180,
+          "after": 1999,
+          "target": 2000
+        },
+        {
+          "index": 3,
+          "before": 2604,
+          "after": 2000,
+          "target": 2000
+        },
+        {
+          "index": 4,
+          "before": 2080,
+          "after": 2000,
+          "target": 2000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/dead_tree_trunk/dead_tree_trunk_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 101802,
+      "trianglesAfter": 9990,
+      "geometryBytesBefore": 2293788,
+      "geometryBytesAfter": 244260,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0.0006514377892017365,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -1.5391005277633667,
+            -0.02773353084921837,
+            -0.17080287635326385
+          ],
+          "max": [
+            1.5119144916534424,
+            0.2626980245113373,
+            0.10672463476657867
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -1.5391005277633667,
+            -0.027082093060016632,
+            -0.17080287635326385
+          ],
+          "max": [
+            1.5119144916534424,
+            0.2626980245113373,
+            0.10672463476657867
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 101802,
+          "after": 9990,
+          "target": 10000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/dry_branches_medium_01/dry_branches_medium_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 16803,
+      "trianglesAfter": 11999,
+      "geometryBytesBefore": 465172,
+      "geometryBytesAfter": 354684,
+      "materialCount": 1,
+      "primitiveCount": 3,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.5474377125501633,
+            -0.016527727246284485,
+            -0.6898306459188461
+          ],
+          "max": [
+            0.5120484866201878,
+            0.324457585811615,
+            0.609322264790535
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.5474377125501633,
+            -0.016527727246284485,
+            -0.6898306459188461
+          ],
+          "max": [
+            0.5120484866201878,
+            0.324457585811615,
+            0.609322264790535
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 5616,
+          "after": 4000,
+          "target": 4000
+        },
+        {
+          "index": 1,
+          "before": 5254,
+          "after": 4000,
+          "target": 4000
+        },
+        {
+          "index": 2,
+          "before": 5933,
+          "after": 3999,
+          "target": 4000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/fern_02/fern_02_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 6232,
+      "trianglesAfter": 5801,
+      "geometryBytesBefore": 176176,
+      "geometryBytesAfter": 164824,
+      "materialCount": 1,
+      "primitiveCount": 4,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.5281425714492798,
+            -0.030510280281305313,
+            -0.421874463558197
+          ],
+          "max": [
+            1.4443871974945068,
+            0.39718443155288696,
+            1.3021531403064728
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.5281425714492798,
+            -0.030510280281305313,
+            -0.421874463558197
+          ],
+          "max": [
+            1.4443871974945068,
+            0.39718443155288696,
+            1.3021531403064728
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 2384,
+          "after": 2164,
+          "target": 2000
+        },
+        {
+          "index": 1,
+          "before": 2248,
+          "after": 2037,
+          "target": 2000
+        },
+        {
+          "index": 2,
+          "before": 784,
+          "after": 784,
+          "target": 2000
+        },
+        {
+          "index": 3,
+          "before": 816,
+          "after": 816,
+          "target": 2000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/grass_bermuda_01/grass_bermuda_01_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 941,
+      "trianglesAfter": 941,
+      "geometryBytesBefore": 32260,
+      "geometryBytesAfter": 32260,
+      "materialCount": 1,
+      "primitiveCount": 21,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.7589022498577833,
+            -0.011469793040305376,
+            -0.0701069119386375
+          ],
+          "max": [
+            0.9275741230230778,
+            0.14678589394316077,
+            0.07208762317895889
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.7589022498577833,
+            -0.011469793040305376,
+            -0.0701069119386375
+          ],
+          "max": [
+            0.9275741230230778,
+            0.14678589394316077,
+            0.07208762317895889
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 12,
+          "after": 12,
+          "target": 4000
+        },
+        {
+          "index": 1,
+          "before": 12,
+          "after": 12,
+          "target": 4000
+        },
+        {
+          "index": 2,
+          "before": 19,
+          "after": 19,
+          "target": 4000
+        },
+        {
+          "index": 3,
+          "before": 17,
+          "after": 17,
+          "target": 4000
+        },
+        {
+          "index": 4,
+          "before": 8,
+          "after": 8,
+          "target": 4000
+        },
+        {
+          "index": 5,
+          "before": 20,
+          "after": 20,
+          "target": 4000
+        },
+        {
+          "index": 6,
+          "before": 14,
+          "after": 14,
+          "target": 4000
+        },
+        {
+          "index": 7,
+          "before": 24,
+          "after": 24,
+          "target": 4000
+        },
+        {
+          "index": 8,
+          "before": 30,
+          "after": 30,
+          "target": 4000
+        },
+        {
+          "index": 9,
+          "before": 147,
+          "after": 147,
+          "target": 4000
+        },
+        {
+          "index": 10,
+          "before": 140,
+          "after": 140,
+          "target": 4000
+        },
+        {
+          "index": 11,
+          "before": 128,
+          "after": 128,
+          "target": 4000
+        },
+        {
+          "index": 12,
+          "before": 268,
+          "after": 268,
+          "target": 4000
+        },
+        {
+          "index": 13,
+          "before": 15,
+          "after": 15,
+          "target": 4000
+        },
+        {
+          "index": 14,
+          "before": 15,
+          "after": 15,
+          "target": 4000
+        },
+        {
+          "index": 15,
+          "before": 12,
+          "after": 12,
+          "target": 4000
+        },
+        {
+          "index": 16,
+          "before": 12,
+          "after": 12,
+          "target": 4000
+        },
+        {
+          "index": 17,
+          "before": 18,
+          "after": 18,
+          "target": 4000
+        },
+        {
+          "index": 18,
+          "before": 10,
+          "after": 10,
+          "target": 4000
+        },
+        {
+          "index": 19,
+          "before": 10,
+          "after": 10,
+          "target": 4000
+        },
+        {
+          "index": 20,
+          "before": 10,
+          "after": 10,
+          "target": 4000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/grass_medium_01/grass_medium_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 24730,
+      "trianglesAfter": 13550,
+      "geometryBytesBefore": 1006632,
+      "geometryBytesAfter": 584448,
+      "materialCount": 1,
+      "primitiveCount": 17,
+      "maximumBoundsDelta": 0.000786827877163887,
+      "relativeErrorLimit": 0.006,
+      "boundsBefore": [
+        {
+          "min": [
+            -2.552794486284256,
+            -0.025613101199269295,
+            -0.15770849585533142
+          ],
+          "max": [
+            3.052189003676176,
+            0.3169684112071991,
+            0.16885031759738922
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -2.5524024069309235,
+            -0.024826273322105408,
+            -0.15770849585533142
+          ],
+          "max": [
+            3.052189003676176,
+            0.3169684112071991,
+            0.16885031759738922
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 833,
+          "after": 833,
+          "target": 2000
+        },
+        {
+          "index": 1,
+          "before": 4626,
+          "after": 2083,
+          "target": 2000
+        },
+        {
+          "index": 2,
+          "before": 1257,
+          "after": 1257,
+          "target": 2000
+        },
+        {
+          "index": 3,
+          "before": 310,
+          "after": 310,
+          "target": 2000
+        },
+        {
+          "index": 4,
+          "before": 290,
+          "after": 290,
+          "target": 2000
+        },
+        {
+          "index": 5,
+          "before": 340,
+          "after": 340,
+          "target": 2000
+        },
+        {
+          "index": 6,
+          "before": 653,
+          "after": 653,
+          "target": 2000
+        },
+        {
+          "index": 7,
+          "before": 1466,
+          "after": 1466,
+          "target": 2000
+        },
+        {
+          "index": 8,
+          "before": 2287,
+          "after": 2000,
+          "target": 2000
+        },
+        {
+          "index": 9,
+          "before": 6422,
+          "after": 2017,
+          "target": 2000
+        },
+        {
+          "index": 10,
+          "before": 5945,
+          "after": 2000,
+          "target": 2000
+        },
+        {
+          "index": 11,
+          "before": 40,
+          "after": 40,
+          "target": 2000
+        },
+        {
+          "index": 12,
+          "before": 79,
+          "after": 79,
+          "target": 2000
+        },
+        {
+          "index": 13,
+          "before": 28,
+          "after": 28,
+          "target": 2000
+        },
+        {
+          "index": 14,
+          "before": 32,
+          "after": 32,
+          "target": 2000
+        },
+        {
+          "index": 15,
+          "before": 62,
+          "after": 62,
+          "target": 2000
+        },
+        {
+          "index": 16,
+          "before": 60,
+          "after": 60,
+          "target": 2000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/grass_medium_02/grass_medium_02_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 7842,
+      "trianglesAfter": 7353,
+      "geometryBytesBefore": 272048,
+      "geometryBytesAfter": 257304,
+      "materialCount": 1,
+      "primitiveCount": 5,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.05556991323828697,
+            -0.005509789101779461,
+            -0.1754019558429718
+          ],
+          "max": [
+            1.2550654709339142,
+            0.3998044431209564,
+            0.25784459710121155
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.05556991323828697,
+            -0.005509789101779461,
+            -0.1754019558429718
+          ],
+          "max": [
+            1.2550654709339142,
+            0.3998044431209564,
+            0.25784459710121155
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 714,
+          "after": 714,
+          "target": 2000
+        },
+        {
+          "index": 1,
+          "before": 1760,
+          "after": 1760,
+          "target": 2000
+        },
+        {
+          "index": 2,
+          "before": 1215,
+          "after": 1215,
+          "target": 2000
+        },
+        {
+          "index": 3,
+          "before": 2489,
+          "after": 2000,
+          "target": 2000
+        },
+        {
+          "index": 4,
+          "before": 1664,
+          "after": 1664,
+          "target": 2000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/moss_01/moss_01_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 204,
+      "trianglesAfter": 204,
+      "geometryBytesBefore": 7260,
+      "geometryBytesAfter": 7260,
+      "materialCount": 1,
+      "primitiveCount": 12,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.00889910603291355,
+            -0.0035440043138805777,
+            -0.010091456584632397
+          ],
+          "max": [
+            0.20636089146137238,
+            0.036823973059654236,
+            0.019329404225572944
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.00889910603291355,
+            -0.0035440043138805777,
+            -0.010091456584632397
+          ],
+          "max": [
+            0.20636089146137238,
+            0.036823973059654236,
+            0.019329404225572944
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 24,
+          "after": 24,
+          "target": 4000
+        },
+        {
+          "index": 1,
+          "before": 16,
+          "after": 16,
+          "target": 4000
+        },
+        {
+          "index": 2,
+          "before": 20,
+          "after": 20,
+          "target": 4000
+        },
+        {
+          "index": 3,
+          "before": 20,
+          "after": 20,
+          "target": 4000
+        },
+        {
+          "index": 4,
+          "before": 16,
+          "after": 16,
+          "target": 4000
+        },
+        {
+          "index": 5,
+          "before": 16,
+          "after": 16,
+          "target": 4000
+        },
+        {
+          "index": 6,
+          "before": 24,
+          "after": 24,
+          "target": 4000
+        },
+        {
+          "index": 7,
+          "before": 6,
+          "after": 6,
+          "target": 4000
+        },
+        {
+          "index": 8,
+          "before": 6,
+          "after": 6,
+          "target": 4000
+        },
+        {
+          "index": 9,
+          "before": 8,
+          "after": 8,
+          "target": 4000
+        },
+        {
+          "index": 10,
+          "before": 24,
+          "after": 24,
+          "target": 4000
+        },
+        {
+          "index": 11,
+          "before": 24,
+          "after": 24,
+          "target": 4000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/nettle_plant/nettle_plant_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 31304,
+      "trianglesAfter": 11085,
+      "geometryBytesBefore": 956560,
+      "geometryBytesAfter": 405876,
+      "materialCount": 1,
+      "primitiveCount": 6,
+      "maximumBoundsDelta": 0.00006728153675794601,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.05262836813926697,
+            -0.0055817291140556335,
+            -0.04856731742620468
+          ],
+          "max": [
+            1.0301607269793749,
+            0.21283993124961853,
+            0.04611610248684883
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.05262836813926697,
+            -0.0055144475772976875,
+            -0.04856731742620468
+          ],
+          "max": [
+            1.0301607269793749,
+            0.21283993124961853,
+            0.04611610248684883
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 5896,
+          "after": 1999,
+          "target": 2000
+        },
+        {
+          "index": 1,
+          "before": 5664,
+          "after": 1999,
+          "target": 2000
+        },
+        {
+          "index": 2,
+          "before": 3592,
+          "after": 1999,
+          "target": 2000
+        },
+        {
+          "index": 3,
+          "before": 1088,
+          "after": 1088,
+          "target": 2000
+        },
+        {
+          "index": 4,
+          "before": 6984,
+          "after": 2000,
+          "target": 2000
+        },
+        {
+          "index": 5,
+          "before": 8080,
+          "after": 2000,
+          "target": 2000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/periwinkle_plant/periwinkle_plant_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 34350,
+      "trianglesAfter": 11645,
+      "geometryBytesBefore": 1859752,
+      "geometryBytesAfter": 995424,
+      "materialCount": 1,
+      "primitiveCount": 6,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.006,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.5601290017366409,
+            -0.000024139902961906046,
+            -0.1901986002922058
+          ],
+          "max": [
+            0.6752382069826126,
+            0.4107142388820648,
+            0.13054685294628143
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.5601290017366409,
+            -0.000024139902961906046,
+            -0.1901986002922058
+          ],
+          "max": [
+            0.6752382069826126,
+            0.4107142388820648,
+            0.13054685294628143
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 4108,
+          "after": 1999,
+          "target": 2000
+        },
+        {
+          "index": 1,
+          "before": 1478,
+          "after": 1478,
+          "target": 2000
+        },
+        {
+          "index": 2,
+          "before": 5338,
+          "after": 1993,
+          "target": 2000
+        },
+        {
+          "index": 3,
+          "before": 9096,
+          "after": 1989,
+          "target": 2000
+        },
+        {
+          "index": 4,
+          "before": 3078,
+          "after": 2000,
+          "target": 2000
+        },
+        {
+          "index": 5,
+          "before": 11252,
+          "after": 2186,
+          "target": 2000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/rock_07/rock_07_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 14844,
+      "trianglesAfter": 4000,
+      "geometryBytesBefore": 468936,
+      "geometryBytesAfter": 135696,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0.00031876564025878906,
+      "relativeErrorLimit": 0.004,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.0875801146030426,
+            -0.00190715491771698,
+            -0.17797498404979706
+          ],
+          "max": [
+            0.08130179345607758,
+            0.1418129950761795,
+            0.14230197668075562
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.08726639300584793,
+            -0.0018844231963157654,
+            -0.17789262533187866
+          ],
+          "max": [
+            0.08130179345607758,
+            0.1418129950761795,
+            0.14198321104049683
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 14844,
+          "after": 4000,
+          "target": 4000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/rock_moss_set_01/rock_moss_set_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 63127,
+      "trianglesAfter": 23992,
+      "geometryBytesBefore": 1466380,
+      "geometryBytesAfter": 592208,
+      "materialCount": 1,
+      "primitiveCount": 6,
+      "maximumBoundsDelta": 0.004440665245056152,
+      "relativeErrorLimit": 0.004,
+      "boundsBefore": [
+        {
+          "min": [
+            -3.9140208959579468,
+            -0.6609705686569214,
+            -3.823821544647217
+          ],
+          "max": [
+            4.090582966804504,
+            1.1073492765426636,
+            3.1249431371688843
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -3.9140208959579468,
+            -0.6609705686569214,
+            -3.8193808794021606
+          ],
+          "max": [
+            4.090582966804504,
+            1.1073492765426636,
+            3.1249431371688843
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 11000,
+          "after": 3998,
+          "target": 4000
+        },
+        {
+          "index": 1,
+          "before": 10996,
+          "after": 3994,
+          "target": 4000
+        },
+        {
+          "index": 2,
+          "before": 5000,
+          "after": 4000,
+          "target": 4000
+        },
+        {
+          "index": 3,
+          "before": 10589,
+          "after": 4000,
+          "target": 4000
+        },
+        {
+          "index": 4,
+          "before": 16548,
+          "after": 4000,
+          "target": 4000
+        },
+        {
+          "index": 5,
+          "before": 8994,
+          "after": 4000,
+          "target": 4000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/shrub_01/shrub_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 156012,
+      "trianglesAfter": 11898,
+      "geometryBytesBefore": 5239664,
+      "geometryBytesAfter": 483996,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0.00047895312309265137,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -1.8545848727226257,
+            -0.008752564899623394,
+            -0.11381389200687408
+          ],
+          "max": [
+            0.7320764809846878,
+            0.38722172379493713,
+            0.10474707186222076
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -1.854261338710785,
+            -0.008752564899623394,
+            -0.11360818892717361
+          ],
+          "max": [
+            0.7318415492773056,
+            0.3867427706718445,
+            0.1046035960316658
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 156012,
+          "after": 11898,
+          "target": 12000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/shrub_02/shrub_02_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 27254,
+      "trianglesAfter": 15993,
+      "geometryBytesBefore": 758692,
+      "geometryBytesAfter": 493080,
+      "materialCount": 1,
+      "primitiveCount": 4,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -2.092169083358938,
+            -0.025187009991979863,
+            -1.1300201140228123
+          ],
+          "max": [
+            3.9617086303974918,
+            1.677359569716787,
+            1.1550423649092796
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -2.092169083358938,
+            -0.025187009991979863,
+            -1.1300201140228123
+          ],
+          "max": [
+            3.9617086303974918,
+            1.677359569716787,
+            1.1550423649092796
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 7590,
+          "after": 3998,
+          "target": 4000
+        },
+        {
+          "index": 1,
+          "before": 5242,
+          "after": 3999,
+          "target": 4000
+        },
+        {
+          "index": 2,
+          "before": 9234,
+          "after": 3996,
+          "target": 4000
+        },
+        {
+          "index": 3,
+          "before": 5188,
+          "after": 4000,
+          "target": 4000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/shrub_03/shrub_03_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 8287,
+      "trianglesAfter": 8287,
+      "geometryBytesBefore": 238684,
+      "geometryBytesAfter": 238684,
+      "materialCount": 1,
+      "primitiveCount": 4,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.07354381680488586,
+            -0.0018257149495184422,
+            -0.07270558923482895
+          ],
+          "max": [
+            1.293375588953495,
+            0.4009580910205841,
+            0.07849743962287903
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.07354381680488586,
+            -0.0018257149495184422,
+            -0.07270558923482895
+          ],
+          "max": [
+            1.293375588953495,
+            0.4009580910205841,
+            0.07849743962287903
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 2385,
+          "after": 2385,
+          "target": 4000
+        },
+        {
+          "index": 1,
+          "before": 2134,
+          "after": 2134,
+          "target": 4000
+        },
+        {
+          "index": 2,
+          "before": 1790,
+          "after": 1790,
+          "target": 4000
+        },
+        {
+          "index": 3,
+          "before": 1978,
+          "after": 1978,
+          "target": 4000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/shrub_04/shrub_04_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 27327,
+      "trianglesAfter": 3969,
+      "geometryBytesBefore": 749084,
+      "geometryBytesAfter": 162856,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.02444666624069214,
+            -0.005937241483479738,
+            -0.07500956952571869
+          ],
+          "max": [
+            0.5592435225844383,
+            0.2132624387741089,
+            0.07108771800994873
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.02444666624069214,
+            -0.005937241483479738,
+            -0.07500956952571869
+          ],
+          "max": [
+            0.5592435225844383,
+            0.2132624387741089,
+            0.07108771800994873
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 27327,
+          "after": 3969,
+          "target": 4000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/tree_stump_01/tree_stump_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 41046,
+      "trianglesAfter": 3999,
+      "geometryBytesBefore": 965380,
+      "geometryBytesAfter": 111516,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0.0017006397247314453,
+      "relativeErrorLimit": 0.006,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.7844194173812866,
+            -0.1929784119129181,
+            -0.7604432702064514
+          ],
+          "max": [
+            0.6411310434341431,
+            0.37968912720680237,
+            0.8298710584640503
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.7843959331512451,
+            -0.19281011819839478,
+            -0.75874263048172
+          ],
+          "max": [
+            0.6411310434341431,
+            0.3781428933143616,
+            0.8298710584640503
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 41046,
+          "after": 3999,
+          "target": 4000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/foliage/weed_plant_02/weed_plant_02_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 11116,
+      "trianglesAfter": 9693,
+      "geometryBytesBefore": 330884,
+      "geometryBytesAfter": 296296,
+      "materialCount": 1,
+      "primitiveCount": 5,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.08561167120933533,
+            -0.00856288243085146,
+            -0.11112131178379059
+          ],
+          "max": [
+            2.039641283452511,
+            0.06651004403829575,
+            0.17979809641838074
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.08561167120933533,
+            -0.00856288243085146,
+            -0.11112131178379059
+          ],
+          "max": [
+            2.039641283452511,
+            0.06651004403829575,
+            0.17979809641838074
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 2967,
+          "after": 2000,
+          "target": 2000
+        },
+        {
+          "index": 1,
+          "before": 2273,
+          "after": 2000,
+          "target": 2000
+        },
+        {
+          "index": 2,
+          "before": 1766,
+          "after": 1766,
+          "target": 2000
+        },
+        {
+          "index": 3,
+          "before": 1928,
+          "after": 1928,
+          "target": 2000
+        },
+        {
+          "index": 4,
+          "before": 2182,
+          "after": 1999,
+          "target": 2000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/ammo_box/ammo_box_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 4382,
+      "trianglesAfter": 4382,
+      "geometryBytesBefore": 153588,
+      "geometryBytesAfter": 153588,
+      "materialCount": 1,
+      "primitiveCount": 5,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.0432816818356514,
+            0,
+            -0.12876272201538086
+          ],
+          "max": [
+            0.04328175634145737,
+            0.17747706174850464,
+            0.12911562621593475
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.0432816818356514,
+            0,
+            -0.12876272201538086
+          ],
+          "max": [
+            0.04328175634145737,
+            0.17747706174850464,
+            0.12911562621593475
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 280,
+          "after": 280,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 3394,
+          "after": 3394,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 280,
+          "after": 280,
+          "target": 6000
+        },
+        {
+          "index": 3,
+          "before": 280,
+          "after": 280,
+          "target": 6000
+        },
+        {
+          "index": 4,
+          "before": 148,
+          "after": 148,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/barrel_03/barrel_03_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 1473,
+      "trianglesAfter": 1473,
+      "geometryBytesBefore": 44872,
+      "geometryBytesAfter": 44872,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.31697171926498413,
+            -1.1793932941372987e-7,
+            -0.31929945945739746
+          ],
+          "max": [
+            0.3169717788696289,
+            0.9304735064506531,
+            0.3193000555038452
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.31697171926498413,
+            -1.1793932941372987e-7,
+            -0.31929945945739746
+          ],
+          "max": [
+            0.3169717788696289,
+            0.9304735064506531,
+            0.3193000555038452
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 1473,
+          "after": 1473,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/compost_bags/compost_bags_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 18708,
+      "trianglesAfter": 18708,
+      "geometryBytesBefore": 473352,
+      "geometryBytesAfter": 473352,
+      "materialCount": 1,
+      "primitiveCount": 4,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.7442316114902496,
+            -0.005449920892715454,
+            -0.43819326162338257
+          ],
+          "max": [
+            1.08389628108459,
+            0.7018166184425354,
+            0.48774990330121687
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.7442316114902496,
+            -0.005449920892715454,
+            -0.43819326162338257
+          ],
+          "max": [
+            1.08389628108459,
+            0.7018166184425354,
+            0.48774990330121687
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 4608,
+          "after": 4608,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 4608,
+          "after": 4608,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 4608,
+          "after": 4608,
+          "target": 6000
+        },
+        {
+          "index": 3,
+          "before": 4884,
+          "after": 4884,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/concrete_road_barrier_02/concrete_road_barrier_02_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 23822,
+      "trianglesAfter": 6000,
+      "geometryBytesBefore": 542900,
+      "geometryBytesAfter": 144000,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0.00035500526428222656,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.7761769890785217,
+            -0.0027944163884967566,
+            -0.2540489733219147
+          ],
+          "max": [
+            0.7892323732376099,
+            1.1091585159301758,
+            0.18809300661087036
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.7761769890785217,
+            -0.0027944163884967566,
+            -0.2540489733219147
+          ],
+          "max": [
+            0.7892323732376099,
+            1.1088035106658936,
+            0.18809300661087036
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 23822,
+          "after": 6000,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/covered_car/covered_car_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 12592,
+      "trianglesAfter": 12592,
+      "geometryBytesBefore": 394464,
+      "geometryBytesAfter": 394464,
+      "materialCount": 2,
+      "primitiveCount": 5,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.8466806896030903,
+            5.960464477539063e-8,
+            -2.1663158424198627
+          ],
+          "max": [
+            0.9422822706401348,
+            1.4111131429672241,
+            2.2139384262263775
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.8466806896030903,
+            5.960464477539063e-8,
+            -2.1663158424198627
+          ],
+          "max": [
+            0.9422822706401348,
+            1.4111131429672241,
+            2.2139384262263775
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 2016,
+          "after": 2016,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 2016,
+          "after": 2016,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 2016,
+          "after": 2016,
+          "target": 6000
+        },
+        {
+          "index": 3,
+          "before": 2016,
+          "after": 2016,
+          "target": 6000
+        },
+        {
+          "index": 4,
+          "before": 4528,
+          "after": 4528,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/fire_hydrant/fire_hydrant_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 86316,
+      "trianglesAfter": 35688,
+      "geometryBytesBefore": 1928772,
+      "geometryBytesAfter": 926968,
+      "materialCount": 2,
+      "primitiveCount": 14,
+      "maximumBoundsDelta": 0.000255584716796875,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.4417688846588135,
+            -0.0000887151836650446,
+            -0.12653666734695435
+          ],
+          "max": [
+            0.43285468220710754,
+            0.7993673086166382,
+            0.1912069022655487
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.4417688846588135,
+            0,
+            -0.12628108263015747
+          ],
+          "max": [
+            0.43285468220710754,
+            0.7993673086166382,
+            0.1912069022655487
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 22888,
+          "after": 6000,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 2204,
+          "after": 2204,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 1750,
+          "after": 1750,
+          "target": 6000
+        },
+        {
+          "index": 3,
+          "before": 70,
+          "after": 70,
+          "target": 6000
+        },
+        {
+          "index": 4,
+          "before": 1740,
+          "after": 1740,
+          "target": 6000
+        },
+        {
+          "index": 5,
+          "before": 80,
+          "after": 80,
+          "target": 6000
+        },
+        {
+          "index": 6,
+          "before": 14426,
+          "after": 6000,
+          "target": 6000
+        },
+        {
+          "index": 7,
+          "before": 22888,
+          "after": 6000,
+          "target": 6000
+        },
+        {
+          "index": 8,
+          "before": 2204,
+          "after": 2204,
+          "target": 6000
+        },
+        {
+          "index": 9,
+          "before": 1750,
+          "after": 1750,
+          "target": 6000
+        },
+        {
+          "index": 10,
+          "before": 70,
+          "after": 70,
+          "target": 6000
+        },
+        {
+          "index": 11,
+          "before": 1740,
+          "after": 1740,
+          "target": 6000
+        },
+        {
+          "index": 12,
+          "before": 80,
+          "after": 80,
+          "target": 6000
+        },
+        {
+          "index": 13,
+          "before": 14426,
+          "after": 6000,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/hand_truck/hand_truck_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 13220,
+      "trianglesAfter": 6318,
+      "geometryBytesBefore": 535704,
+      "geometryBytesAfter": 345076,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0.0002866089344024658,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.2966264486312866,
+            -0.00004776567220687866,
+            -0.09563499689102173
+          ],
+          "max": [
+            0.29662641882896423,
+            1.4024649858474731,
+            0.5968921184539795
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.2966264486312866,
+            0.0002388283610343933,
+            -0.09534838795661926
+          ],
+          "max": [
+            0.29662641882896423,
+            1.4024649858474731,
+            0.5968921184539795
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 13220,
+          "after": 6318,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/horse_statue_01/horse_statue_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 22388,
+      "trianglesAfter": 6479,
+      "geometryBytesBefore": 839480,
+      "geometryBytesAfter": 264948,
+      "materialCount": 2,
+      "primitiveCount": 2,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.08515907824039459,
+            0.00001830275505199097,
+            -0.05391017720103264
+          ],
+          "max": [
+            0.07783335447311401,
+            0.21999721229076385,
+            0.053880687803030014
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.08515907824039459,
+            0.00001830275505199097,
+            -0.05391017720103264
+          ],
+          "max": [
+            0.07783335447311401,
+            0.21999721229076385,
+            0.053880687803030014
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 21908,
+          "after": 5999,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 480,
+          "after": 480,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/large_iron_gate/large_iron_gate_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 38140,
+      "trianglesAfter": 12983,
+      "geometryBytesBefore": 971848,
+      "geometryBytesAfter": 359148,
+      "materialCount": 1,
+      "primitiveCount": 4,
+      "maximumBoundsDelta": 0.0002257823944091797,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -1.475045919418335,
+            -0.007873366586863995,
+            -0.03582783043384552
+          ],
+          "max": [
+            1.475045919418335,
+            2.9207804203033447,
+            0.0615086555480957
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -1.475045919418335,
+            -0.007873366586863995,
+            -0.03582783043384552
+          ],
+          "max": [
+            1.475045919418335,
+            2.9205546379089355,
+            0.0615086555480957
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 18992,
+          "after": 5999,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 408,
+          "after": 408,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 18164,
+          "after": 6000,
+          "target": 6000
+        },
+        {
+          "index": 3,
+          "before": 576,
+          "after": 576,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/lifebuoy/lifebuoy_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 10728,
+      "trianglesAfter": 5999,
+      "geometryBytesBefore": 255280,
+      "geometryBytesAfter": 148316,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0.0003363415598869324,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.3904019892215729,
+            -0.4621988832950592,
+            -0.07071281224489212
+          ],
+          "max": [
+            0.39272621273994446,
+            0.37899452447891235,
+            0.08440569788217545
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.3902815878391266,
+            -0.4621988832950592,
+            -0.07037647068500519
+          ],
+          "max": [
+            0.39272621273994446,
+            0.37899452447891235,
+            0.08440569788217545
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 10728,
+          "after": 5999,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/metal_jerrycan_green/metal_jerrycan_green_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 9636,
+      "trianglesAfter": 9636,
+      "geometryBytesBefore": 273368,
+      "geometryBytesAfter": 273368,
+      "materialCount": 1,
+      "primitiveCount": 5,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.18807363246272954,
+            0,
+            -0.08543366193771362
+          ],
+          "max": [
+            0.17236989736557007,
+            0.49989572430107476,
+            0.08543366193771362
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.18807363246272954,
+            0,
+            -0.08543366193771362
+          ],
+          "max": [
+            0.17236989736557007,
+            0.49989572430107476,
+            0.08543366193771362
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 518,
+          "after": 518,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 1048,
+          "after": 1048,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 3942,
+          "after": 3942,
+          "target": 6000
+        },
+        {
+          "index": 3,
+          "before": 3118,
+          "after": 3118,
+          "target": 6000
+        },
+        {
+          "index": 4,
+          "before": 1010,
+          "after": 1010,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/metal_trash_can/metal_trash_can_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 13960,
+      "trianglesAfter": 13960,
+      "geometryBytesBefore": 378288,
+      "geometryBytesAfter": 378288,
+      "materialCount": 3,
+      "primitiveCount": 8,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.9526877250615648,
+            0.00006173570000100881,
+            -0.27814497413328354
+          ],
+          "max": [
+            0.8253218760933757,
+            0.9062314629554749,
+            0.2781448179275685
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.9526877250615648,
+            0.00006173570000100881,
+            -0.27814497413328354
+          ],
+          "max": [
+            0.8253218760933757,
+            0.9062314629554749,
+            0.2781448179275685
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 416,
+          "after": 416,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 1548,
+          "after": 1548,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 4048,
+          "after": 4048,
+          "target": 6000
+        },
+        {
+          "index": 3,
+          "before": 416,
+          "after": 416,
+          "target": 6000
+        },
+        {
+          "index": 4,
+          "before": 4928,
+          "after": 4928,
+          "target": 6000
+        },
+        {
+          "index": 5,
+          "before": 448,
+          "after": 448,
+          "target": 6000
+        },
+        {
+          "index": 6,
+          "before": 448,
+          "after": 448,
+          "target": 6000
+        },
+        {
+          "index": 7,
+          "before": 1708,
+          "after": 1708,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/ocean_buoy/ocean_buoy_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 12240,
+      "trianglesAfter": 6000,
+      "geometryBytesBefore": 426240,
+      "geometryBytesAfter": 249984,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0.0008003115653991699,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.4760739803314209,
+            -0.8093715310096741,
+            -0.4760739803314209
+          ],
+          "max": [
+            0.5905362963676453,
+            1.84686279296875,
+            0.4760739803314209
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.4760739803314209,
+            -0.8093715310096741,
+            -0.4760739803314209
+          ],
+          "max": [
+            0.5897359848022461,
+            1.84686279296875,
+            0.4760739803314209
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 12240,
+          "after": 6000,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/old_military_crate/old_military_crate_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 10476,
+      "trianglesAfter": 10476,
+      "geometryBytesBefore": 329004,
+      "geometryBytesAfter": 329004,
+      "materialCount": 1,
+      "primitiveCount": 5,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.9130357205867767,
+            -0.000014290213584899902,
+            -0.6670934489596703
+          ],
+          "max": [
+            0.902349978685379,
+            0.3009185492992401,
+            0.30862098932266235
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.9130357205867767,
+            -0.000014290213584899902,
+            -0.6670934489596703
+          ],
+          "max": [
+            0.902349978685379,
+            0.3009185492992401,
+            0.30862098932266235
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 2177,
+          "after": 2177,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 660,
+          "after": 660,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 1128,
+          "after": 1128,
+          "target": 6000
+        },
+        {
+          "index": 3,
+          "before": 1806,
+          "after": 1806,
+          "target": 6000
+        },
+        {
+          "index": 4,
+          "before": 4705,
+          "after": 4705,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/old_tyre/old_tyre_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 2880,
+      "trianglesAfter": 2880,
+      "geometryBytesBefore": 84160,
+      "geometryBytesAfter": 84160,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.30000001192092896,
+            -0.30000001192092896,
+            -0.08276332169771194
+          ],
+          "max": [
+            0.30000001192092896,
+            0.30000001192092896,
+            0.08223667740821838
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.30000001192092896,
+            -0.30000001192092896,
+            -0.08276332169771194
+          ],
+          "max": [
+            0.30000001192092896,
+            0.30000001192092896,
+            0.08223667740821838
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 2880,
+          "after": 2880,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 9828,
+      "trianglesAfter": 9828,
+      "geometryBytesBefore": 456856,
+      "geometryBytesAfter": 456856,
+      "materialCount": 2,
+      "primitiveCount": 3,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.4255073368549347,
+            -0.005937529727816582,
+            -0.8110715223342984
+          ],
+          "max": [
+            0.3161578106815515,
+            0.8526440858840942,
+            0.9062482270055956
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.4255073368549347,
+            -0.005937529727816582,
+            -0.8110715223342984
+          ],
+          "max": [
+            0.3161578106815515,
+            0.8526440858840942,
+            0.9062482270055956
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 3752,
+          "after": 3752,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 2324,
+          "after": 2324,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 3752,
+          "after": 3752,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/painted_wooden_bench/painted_wooden_bench_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 630,
+      "trianglesAfter": 630,
+      "geometryBytesBefore": 25444,
+      "geometryBytesAfter": 25444,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.5760610699653625,
+            -0.0004994967021048069,
+            -0.25369879603385925
+          ],
+          "max": [
+            0.5888825058937073,
+            0.8887919783592224,
+            0.24284429848194122
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.5760610699653625,
+            -0.0004994967021048069,
+            -0.25369879603385925
+          ],
+          "max": [
+            0.5888825058937073,
+            0.8887919783592224,
+            0.24284429848194122
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 630,
+          "after": 630,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/painted_wooden_chair_01/painted_wooden_chair_01_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 724,
+      "trianglesAfter": 724,
+      "geometryBytesBefore": 37112,
+      "geometryBytesAfter": 37112,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.21740016341209412,
+            -0.0007415645522996783,
+            -0.30059924721717834
+          ],
+          "max": [
+            0.21435128152370453,
+            0.9557405710220337,
+            0.23922492563724518
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.21740016341209412,
+            -0.0007415645522996783,
+            -0.30059924721717834
+          ],
+          "max": [
+            0.21435128152370453,
+            0.9557405710220337,
+            0.23922492563724518
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 724,
+          "after": 724,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/painted_wooden_table/painted_wooden_table_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 600,
+      "trianglesAfter": 600,
+      "geometryBytesBefore": 25552,
+      "geometryBytesAfter": 25552,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -1.2033226490020752,
+            -0.0004928112030029297,
+            -0.5711875557899475
+          ],
+          "max": [
+            1.20228111743927,
+            0.9581443071365356,
+            0.565796434879303
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -1.2033226490020752,
+            -0.0004928112030029297,
+            -0.5711875557899475
+          ],
+          "max": [
+            1.20228111743927,
+            0.9581443071365356,
+            0.565796434879303
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 600,
+          "after": 600,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/planter_box_01/planter_box_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 8094,
+      "trianglesAfter": 6000,
+      "geometryBytesBefore": 250580,
+      "geometryBytesAfter": 195008,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.45671579241752625,
+            0.00002816971391439438,
+            -0.20713478326797485
+          ],
+          "max": [
+            0.4558956027030945,
+            0.42499640583992004,
+            0.20653319358825684
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.45671579241752625,
+            0.00002816971391439438,
+            -0.20713478326797485
+          ],
+          "max": [
+            0.4558956027030945,
+            0.42499640583992004,
+            0.20653319358825684
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 8094,
+          "after": 6000,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/planter_box_02/planter_box_02_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 10944,
+      "trianglesAfter": 5999,
+      "geometryBytesBefore": 359296,
+      "geometryBytesAfter": 211420,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0.00018107891082763672,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.6248849630355835,
+            -0.0006896555423736572,
+            -0.23476505279541016
+          ],
+          "max": [
+            0.626691460609436,
+            0.4526830017566681,
+            0.23242107033729553
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.6248849630355835,
+            -0.0006896555423736572,
+            -0.23476505279541016
+          ],
+          "max": [
+            0.6265103816986084,
+            0.4526830017566681,
+            0.2324032187461853
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 10944,
+          "after": 5999,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/planter_pot_clay/planter_pot_clay_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 3080,
+      "trianglesAfter": 3080,
+      "geometryBytesBefore": 78096,
+      "geometryBytesAfter": 78096,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.13400615751743317,
+            0.00040199398063123226,
+            -0.12028281390666962
+          ],
+          "max": [
+            0.13199056684970856,
+            0.2222723364830017,
+            0.1431802362203598
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.13400615751743317,
+            0.00040199398063123226,
+            -0.12028281390666962
+          ],
+          "max": [
+            0.13199056684970856,
+            0.2222723364830017,
+            0.1431802362203598
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 3080,
+          "after": 3080,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/rusted_spade_01/rusted_spade_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 11436,
+      "trianglesAfter": 6000,
+      "geometryBytesBefore": 281064,
+      "geometryBytesAfter": 155104,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.08405739068984985,
+            -0.5032017230987549,
+            -0.022995803505182266
+          ],
+          "max": [
+            0.08405742049217224,
+            0.5977030396461487,
+            0.022568460553884506
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.08405739068984985,
+            -0.5032017230987549,
+            -0.022995803505182266
+          ],
+          "max": [
+            0.08405742049217224,
+            0.5977030396461487,
+            0.022568460553884506
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 11436,
+          "after": 6000,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/standing_chalkboard_01/standing_chalkboard_01_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 2372,
+      "trianglesAfter": 2372,
+      "geometryBytesBefore": 100120,
+      "geometryBytesAfter": 100120,
+      "materialCount": 2,
+      "primitiveCount": 2,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.4461677670478821,
+            -1.5056824054227036e-7,
+            -0.37935230135917664
+          ],
+          "max": [
+            0.47335898876190186,
+            1.5090322494506836,
+            0.3793523609638214
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.4461677670478821,
+            -1.5056824054227036e-7,
+            -0.37935230135917664
+          ],
+          "max": [
+            0.47335898876190186,
+            1.5090322494506836,
+            0.3793523609638214
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 2364,
+          "after": 2364,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 8,
+          "after": 8,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/stone_fire_pit/stone_fire_pit_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 3887,
+      "trianglesAfter": 3887,
+      "geometryBytesBefore": 96220,
+      "geometryBytesAfter": 96220,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.736316442489624,
+            -0.19342292845249176,
+            -0.7149089574813843
+          ],
+          "max": [
+            0.7121797800064087,
+            0.1949031502008438,
+            0.7183254957199097
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.736316442489624,
+            -0.19342292845249176,
+            -0.7149089574813843
+          ],
+          "max": [
+            0.7121797800064087,
+            0.1949031502008438,
+            0.7183254957199097
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 3887,
+          "after": 3887,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/street_lamp_01/street_lamp_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 30610,
+      "trianglesAfter": 6560,
+      "geometryBytesBefore": 748908,
+      "geometryBytesAfter": 183328,
+      "materialCount": 3,
+      "primitiveCount": 3,
+      "maximumBoundsDelta": 0.0006515085697174072,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.35216811299324036,
+            0,
+            -0.19324657320976257
+          ],
+          "max": [
+            0.35216811299324036,
+            3.8705554008483887,
+            0.19324658811092377
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.3515518605709076,
+            0,
+            -0.19259506464004517
+          ],
+          "max": [
+            0.351848304271698,
+            3.8705554008483887,
+            0.19311150908470154
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 30050,
+          "after": 6000,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 336,
+          "after": 336,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 224,
+          "after": 224,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/street_lamp_02/street_lamp_02_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 20338,
+      "trianglesAfter": 6559,
+      "geometryBytesBefore": 530092,
+      "geometryBytesAfter": 197020,
+      "materialCount": 3,
+      "primitiveCount": 3,
+      "maximumBoundsDelta": 0.00032198429107666016,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.19324660301208496,
+            -0.394923597574234,
+            -2.31228973746056e-8
+          ],
+          "max": [
+            0.19324655830860138,
+            1.2801183462142944,
+            0.8067892789840698
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.19311153888702393,
+            -0.39460161328315735,
+            -2.3082069589008825e-8
+          ],
+          "max": [
+            0.19311147928237915,
+            1.2801183462142944,
+            0.8066542148590088
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 19778,
+          "after": 5999,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 336,
+          "after": 336,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 224,
+          "after": 224,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/utility_box_01/utility_box_01_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 4404,
+      "trianglesAfter": 4404,
+      "geometryBytesBefore": 142552,
+      "geometryBytesAfter": 142552,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.2600001096725464,
+            0,
+            -0.20999999344348907
+          ],
+          "max": [
+            0.2600001096725464,
+            1.1203334331512451,
+            0.22200000286102295
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.2600001096725464,
+            0,
+            -0.20999999344348907
+          ],
+          "max": [
+            0.2600001096725464,
+            1.1203334331512451,
+            0.22200000286102295
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 4404,
+          "after": 4404,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/utility_box_02/utility_box_02_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 6268,
+      "trianglesAfter": 5999,
+      "geometryBytesBefore": 199784,
+      "geometryBytesAfter": 193212,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.46000003814697266,
+            0,
+            -0.20999999344348907
+          ],
+          "max": [
+            0.4600001573562622,
+            1.1203334331512451,
+            0.22200000286102295
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.46000003814697266,
+            0,
+            -0.20999999344348907
+          ],
+          "max": [
+            0.4600001573562622,
+            1.1203334331512451,
+            0.22200000286102295
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 6268,
+          "after": 5999,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/water_manhole_cover/water_manhole_cover_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 6301,
+      "trianglesAfter": 6301,
+      "geometryBytesBefore": 202320,
+      "geometryBytesAfter": 202320,
+      "materialCount": 1,
+      "primitiveCount": 2,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.3453802466392517,
+            -0.028761375695466995,
+            -0.3453802466392517
+          ],
+          "max": [
+            0.3453802466392517,
+            0.038856424391269684,
+            0.3453802466392517
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.3453802466392517,
+            -0.028761375695466995,
+            -0.3453802466392517
+          ],
+          "max": [
+            0.3453802466392517,
+            0.038856424391269684,
+            0.3453802466392517
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 640,
+          "after": 640,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 5661,
+          "after": 5661,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/watering_can_metal_01/watering_can_metal_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 11837,
+      "trianglesAfter": 5999,
+      "geometryBytesBefore": 318736,
+      "geometryBytesAfter": 175772,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0.000045806169509887695,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.09528457373380661,
+            -0.0010444645304232836,
+            -0.17470625042915344
+          ],
+          "max": [
+            0.09573400020599365,
+            0.19577406346797943,
+            0.2776298224925995
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.09528457373380661,
+            -0.0010444645304232836,
+            -0.17466044425964355
+          ],
+          "max": [
+            0.09573400020599365,
+            0.19577406346797943,
+            0.2776298224925995
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 11837,
+          "after": 5999,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/wicker_basket_01/wicker_basket_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 22276,
+      "trianglesAfter": 8238,
+      "geometryBytesBefore": 624920,
+      "geometryBytesAfter": 258356,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0.0010740607976913452,
+      "relativeErrorLimit": 0.006,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.19188226759433746,
+            -0.0009166551753878593,
+            -0.14794304966926575
+          ],
+          "max": [
+            0.19134199619293213,
+            0.11650627851486206,
+            0.14707215130329132
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.19165770709514618,
+            -0.0009166551753878593,
+            -0.1468689888715744
+          ],
+          "max": [
+            0.19134199619293213,
+            0.11650627851486206,
+            0.14707215130329132
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 22276,
+          "after": 8238,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/wine_barrel_01/wine_barrel_01_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 10820,
+      "trianglesAfter": 6616,
+      "geometryBytesBefore": 385912,
+      "geometryBytesAfter": 264976,
+      "materialCount": 1,
+      "primitiveCount": 4,
+      "maximumBoundsDelta": 2.9802322387695312e-8,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.37094923853874207,
+            0.0006841719150543213,
+            -0.37095293402671814
+          ],
+          "max": [
+            0.3709522783756256,
+            0.8719475269317627,
+            0.38508278131484985
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.37094923853874207,
+            0.000684201717376709,
+            -0.37095293402671814
+          ],
+          "max": [
+            0.3709522783756256,
+            0.8719475269317627,
+            0.38508278131484985
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 224,
+          "after": 224,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 168,
+          "after": 168,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 10204,
+          "after": 6000,
+          "target": 6000
+        },
+        {
+          "index": 3,
+          "before": 224,
+          "after": 224,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/wooden_axe_02/wooden_axe_02_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 2218,
+      "trianglesAfter": 2218,
+      "geometryBytesBefore": 59196,
+      "geometryBytesAfter": 59196,
+      "materialCount": 1,
+      "primitiveCount": 1,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.02563943900167942,
+            -0.28170767426490784,
+            -0.0402105338871479
+          ],
+          "max": [
+            0.025264345109462738,
+            0.4224969744682312,
+            0.18552616238594055
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.02563943900167942,
+            -0.28170767426490784,
+            -0.0402105338871479
+          ],
+          "max": [
+            0.025264345109462738,
+            0.4224969744682312,
+            0.18552616238594055
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 2218,
+          "after": 2218,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/wooden_bucket_01/wooden_bucket_01_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 5116,
+      "trianglesAfter": 5116,
+      "geometryBytesBefore": 158408,
+      "geometryBytesAfter": 158408,
+      "materialCount": 1,
+      "primitiveCount": 2,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.1844465434551239,
+            0.00013674795627593994,
+            -0.16996059819939546
+          ],
+          "max": [
+            0.18252430856227875,
+            0.5499991178512573,
+            0.17226058736559935
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.1844465434551239,
+            0.00013674795627593994,
+            -0.16996059819939546
+          ],
+          "max": [
+            0.18252430856227875,
+            0.5499991178512573,
+            0.17226058736559935
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 4484,
+          "after": 4484,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 632,
+          "after": 632,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/wooden_bucket_02/wooden_bucket_02_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 7252,
+      "trianglesAfter": 6679,
+      "geometryBytesBefore": 227128,
+      "geometryBytesAfter": 213740,
+      "materialCount": 1,
+      "primitiveCount": 3,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.3077849745750427,
+            0.000261455774307251,
+            -0.3086950480937958
+          ],
+          "max": [
+            0.3075416684150696,
+            0.3506869375705719,
+            0.30760839581489563
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.3077849745750427,
+            0.000261455774307251,
+            -0.3086950480937958
+          ],
+          "max": [
+            0.3075416684150696,
+            0.3506869375705719,
+            0.30760839581489563
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 6572,
+          "after": 5999,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 340,
+          "after": 340,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 340,
+          "after": 340,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/wooden_crate_01/wooden_crate_01_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 6576,
+      "trianglesAfter": 6576,
+      "geometryBytesBefore": 189408,
+      "geometryBytesAfter": 189408,
+      "materialCount": 1,
+      "primitiveCount": 3,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.4126364588737488,
+            -0.00793334562331438,
+            -0.1961396187543869
+          ],
+          "max": [
+            0.4126364588737488,
+            0.3416849374771118,
+            0.2128141224384308
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.4126364588737488,
+            -0.00793334562331438,
+            -0.1961396187543869
+          ],
+          "max": [
+            0.4126364588737488,
+            0.3416849374771118,
+            0.2128141224384308
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 692,
+          "after": 692,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 5508,
+          "after": 5508,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 376,
+          "after": 376,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/wooden_crate_02/wooden_crate_02_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 5176,
+      "trianglesAfter": 5176,
+      "geometryBytesBefore": 150064,
+      "geometryBytesAfter": 150064,
+      "materialCount": 1,
+      "primitiveCount": 2,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.26455047726631165,
+            -0.009823650121688843,
+            -0.5833403468132019
+          ],
+          "max": [
+            0.26455047726631165,
+            0.4541309028863907,
+            0.5829854607582092
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.26455047726631165,
+            -0.009823650121688843,
+            -0.5833403468132019
+          ],
+          "max": [
+            0.26455047726631165,
+            0.4541309028863907,
+            0.5829854607582092
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 4492,
+          "after": 4492,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 684,
+          "after": 684,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/wooden_ladder/wooden_ladder_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 8492,
+      "trianglesAfter": 8492,
+      "geometryBytesBefore": 282184,
+      "geometryBytesAfter": 282184,
+      "materialCount": 1,
+      "primitiveCount": 2,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.4848731458187103,
+            0,
+            -0.24999995529651642
+          ],
+          "max": [
+            0.4742986559867859,
+            1.334923267364502,
+            0.2500000596046448
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.4848731458187103,
+            0,
+            -0.24999995529651642
+          ],
+          "max": [
+            0.4742986559867859,
+            1.334923267364502,
+            0.2500000596046448
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 4808,
+          "after": 4808,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 3684,
+          "after": 3684,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/wooden_lantern_01/wooden_lantern_01_1k.gltf",
+      "changed": false,
+      "trianglesBefore": 8321,
+      "trianglesAfter": 8321,
+      "geometryBytesBefore": 268136,
+      "geometryBytesAfter": 268136,
+      "materialCount": 2,
+      "primitiveCount": 5,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -0.11051704734563828,
+            -0.011375104659236968,
+            -0.11054381728172302
+          ],
+          "max": [
+            0.1105310469865799,
+            0.5187614560127258,
+            0.12418060377240181
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -0.11051704734563828,
+            -0.011375104659236968,
+            -0.11054381728172302
+          ],
+          "max": [
+            0.1105310469865799,
+            0.5187614560127258,
+            0.12418060377240181
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 5583,
+          "after": 5583,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 36,
+          "after": 36,
+          "target": 6000
+        },
+        {
+          "index": 2,
+          "before": 2042,
+          "after": 2042,
+          "target": 6000
+        },
+        {
+          "index": 3,
+          "before": 12,
+          "after": 12,
+          "target": 6000
+        },
+        {
+          "index": 4,
+          "before": 648,
+          "after": 648,
+          "target": 6000
+        }
+      ]
+    },
+    {
+      "path": "public/assets/props/wooden_picnic_table/wooden_picnic_table_1k.gltf",
+      "changed": true,
+      "trianglesBefore": 10210,
+      "trianglesAfter": 8625,
+      "geometryBytesBefore": 279116,
+      "geometryBytesAfter": 241384,
+      "materialCount": 2,
+      "primitiveCount": 2,
+      "maximumBoundsDelta": 0,
+      "relativeErrorLimit": 0.002,
+      "boundsBefore": [
+        {
+          "min": [
+            -1.1212488412857056,
+            -0.0002588331699371338,
+            -1.501520037651062
+          ],
+          "max": [
+            1.1197271347045898,
+            0.745728075504303,
+            1.520809531211853
+          ]
+        }
+      ],
+      "boundsAfter": [
+        {
+          "min": [
+            -1.1212488412857056,
+            -0.0002588331699371338,
+            -1.501520037651062
+          ],
+          "max": [
+            1.1197271347045898,
+            0.745728075504303,
+            1.520809531211853
+          ]
+        }
+      ],
+      "primitives": [
+        {
+          "index": 0,
+          "before": 2626,
+          "after": 2626,
+          "target": 6000
+        },
+        {
+          "index": 1,
+          "before": 7584,
+          "after": 5999,
+          "target": 6000
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "fileCount": 60,
+    "optimizedFileCount": 34,
+    "trianglesBefore": 1135722,
+    "trianglesAfter": 464633,
+    "geometryBytesBefore": 33398292,
+    "geometryBytesAfter": 15271920
+  }
+}

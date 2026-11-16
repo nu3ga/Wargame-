@@ -1,0 +1,155 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 17997,
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 3510,
+      "max": [
+        0.39272621273994446,
+        0.37899452447891235,
+        0.08440569788217545
+      ],
+      "min": [
+        -0.3902815878391266,
+        -0.4621988832950592,
+        -0.07037647068500519
+      ],
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 3510,
+      "bufferView": 1,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 3510,
+      "bufferView": 1,
+      "byteOffset": 24
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 35996,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 35996,
+      "byteLength": 112320,
+      "byteStride": 32,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    }
+  ],
+  "images": [
+    {
+      "name": "lifebuoy_nor_gl",
+      "mimeType": "image/jpeg",
+      "uri": "textures/lifebuoy_nor_gl_1k.jpg"
+    },
+    {
+      "name": "lifebuoy_diff",
+      "mimeType": "image/jpeg",
+      "uri": "textures/lifebuoy_diff_1k.jpg"
+    },
+    {
+      "name": "lifebuoy_metal-lifebuoy_rough",
+      "mimeType": "image/jpeg",
+      "uri": "textures/lifebuoy_arm_1k.jpg"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "lifebuoy.bin",
+      "byteLength": 148316
+    }
+  ],
+  "materials": [
+    {
+      "name": "lifebuoy",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Torus.001",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "lifebuoy",
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0
+}

@@ -1,0 +1,94 @@
+{
+  "assets": [
+    {
+      "id": "evening_field",
+      "file": "evening_field_1k.hdr",
+      "source": "https://polyhaven.com/a/evening_field",
+      "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/evening_field_1k.hdr",
+      "author": "Sergej Majboroda",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "width": 1024,
+      "height": 512,
+      "bytes": 1598539,
+      "sha256": "47f8d9d0fcfd632a7e372bd4053a99680f5717b42cb831cd4fdaa8331f313e18",
+      "description": "Warm sunset over a rural grassy field with birch trees; cool sky fill and warm horizon reflections."
+    },
+    {
+      "id": "overcast_soil",
+      "file": "overcast_soil_1k.hdr",
+      "source": "https://polyhaven.com/a/overcast_soil",
+      "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/overcast_soil_1k.hdr",
+      "author": "Sergej Majboroda",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "width": 1024,
+      "height": 512,
+      "bytes": 1650749,
+      "sha256": "8e1db1441e64b3b44c21ebcbbbafe607eb3c52c04508e4f3c21180f6f2cef619",
+      "description": "Soft overcast rural light with muted sky and a dark earth lower hemisphere."
+    },
+    {
+      "id": "evening_road_01_puresky",
+      "file": "evening_road_01_puresky_2k.hdr",
+      "source": "https://polyhaven.com/a/evening_road_01_puresky",
+      "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/evening_road_01_puresky_2k.hdr",
+      "authors": [
+        {
+          "name": "Jarod Guest",
+          "role": "Sky edits"
+        },
+        {
+          "name": "Sergej Majboroda",
+          "role": "Original photography"
+        }
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "width": 2048,
+      "height": 1024,
+      "bytes": 4989873,
+      "sha256": "c120097c261e61264363f9c85daa07fd362ca35e007a2fc121ff293fa2316552",
+      "pure_sky": true,
+      "description": "Photographic pure-sky panorama; scenery and foreground removed by the original asset publisher.",
+      "peak_azimuth_rad": 0.602854449639057,
+      "peak_elevation_deg": 9.931640625,
+      "peak_world_direction": [
+        0.8113764259356581,
+        0.17247308399679595,
+        0.5584991770204428
+      ]
+    },
+    {
+      "id": "overcast_soil_puresky",
+      "file": "overcast_soil_puresky_2k.hdr",
+      "source": "https://polyhaven.com/a/overcast_soil_puresky",
+      "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/overcast_soil_puresky_2k.hdr",
+      "authors": [
+        {
+          "name": "Jarod Guest",
+          "role": "Sky edits"
+        },
+        {
+          "name": "Sergej Majboroda",
+          "role": "Original photography"
+        }
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "width": 2048,
+      "height": 1024,
+      "bytes": 4568000,
+      "sha256": "5414e1ac0c35e451d28595b2a2cba05e2ca301fdeb755b0a469408443093dafc",
+      "pure_sky": true,
+      "description": "Photographic pure-sky panorama; scenery and foreground removed by the original asset publisher.",
+      "peak_azimuth_rad": -0.20708740636456155,
+      "peak_elevation_deg": 34.716796875,
+      "peak_world_direction": [
+        0.8044146901169006,
+        0.5695205193469471,
+        -0.16900705419275983
+      ]
+    }
+  ]
+}

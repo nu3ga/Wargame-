@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix Remix Renda 3D · Abava Valley",
+  "description": "Interactive 3D village exploration, courier driving, Abava river canoeing, and material texture studio built from real Renda, Latvia geospatial data.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

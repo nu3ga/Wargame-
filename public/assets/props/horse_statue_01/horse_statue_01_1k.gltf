@@ -1,0 +1,309 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 337,
+      "max": [
+        0.05958269536495209,
+        0.011499738320708275,
+        0.053880687803030014
+      ],
+      "min": [
+        -0.059524279087781906,
+        0.00001830275505199097,
+        -0.05391017720103264
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 337,
+      "bufferView": 0,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 337,
+      "bufferView": 0,
+      "byteOffset": 24
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 1440,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 17997,
+      "bufferView": 1,
+      "byteOffset": 2880
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 337,
+      "max": [
+        0,
+        0,
+        0
+      ],
+      "min": [
+        0,
+        0,
+        0
+      ],
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 337,
+      "bufferView": 2,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 3700,
+      "max": [
+        0.07783335447311401,
+        0.21999721229076385,
+        0.053308602422475815
+      ],
+      "min": [
+        -0.08515907824039459,
+        0.011014513671398163,
+        -0.05248892307281494
+      ],
+      "bufferView": 3,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 3700,
+      "bufferView": 3,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 3700,
+      "bufferView": 3,
+      "byteOffset": 24
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 3700,
+      "max": [
+        0.0008086264133453369,
+        0.001415148377418518,
+        0.0007443949580192566
+      ],
+      "min": [
+        -0.0009410902857780457,
+        -0.0014692097902297974,
+        -0.0007559079676866531
+      ],
+      "bufferView": 4,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 3700,
+      "bufferView": 4,
+      "byteOffset": 12
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 10784,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 10784,
+      "byteLength": 38876,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 49660,
+      "byteLength": 8088,
+      "byteStride": 24,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 57748,
+      "byteLength": 118400,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 176148,
+      "byteLength": 88800,
+      "byteStride": 24,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    }
+  ],
+  "images": [
+    {
+      "name": "horse_statue_01_nor_gl",
+      "mimeType": "image/jpeg",
+      "uri": "textures/horse_statue_01_nor_gl_1k.jpg"
+    },
+    {
+      "name": "horse_statue_01_diff",
+      "mimeType": "image/jpeg",
+      "uri": "textures/horse_statue_01_diff_1k.jpg"
+    },
+    {
+      "name": "horse_statue_01_arm",
+      "mimeType": "image/jpeg",
+      "uri": "textures/horse_statue_01_arm_1k.jpg"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "horse_statue_01.bin",
+      "byteLength": 264948
+    }
+  ],
+  "materials": [
+    {
+      "name": "horse_statue_01",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      }
+    },
+    {
+      "name": "horse_statue_01_base",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Plane",
+      "extras": {
+        "targetNames": [
+          "hooves"
+        ]
+      },
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 7,
+            "NORMAL": 8,
+            "TEXCOORD_0": 9
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 4,
+          "targets": [
+            {
+              "POSITION": 10,
+              "NORMAL": 11
+            }
+          ]
+        },
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 3,
+          "targets": [
+            {
+              "POSITION": 5,
+              "NORMAL": 6
+            }
+          ]
+        }
+      ],
+      "weights": [
+        1
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "horse_statue_01",
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0
+}
